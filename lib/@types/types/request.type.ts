@@ -1,0 +1,1 @@
+export type TCallbackRequest = (req: Request) => Response | Promise<Response> | string;
