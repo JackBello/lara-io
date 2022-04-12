@@ -1,1 +1,1 @@
-import "./server/init/index.ts";
+import "./src/boot/index.ts";
