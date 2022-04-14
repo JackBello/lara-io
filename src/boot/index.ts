@@ -1,4 +1,4 @@
-import { Application } from '../../lib/core.ts';
+import { Application } from '@lara-io/core';
 
 import AppConfig from '../configs/app.config.ts';
 

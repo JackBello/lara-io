@@ -4,8 +4,14 @@ import { RouterHistoryService } from '../services/router/router-history.service.
 import { RouterService } from '../services/router/router.service.ts';
 import { ServerService } from '../services/server/server.service.ts';
 
+import { TRequestService } from '../@types/request.type.ts';
+
 export function app() {
     return Container.instance;
+}
+
+export function request(): TRequestService {
+    return app().make('@service/request', {}).request;
 }
 
 export function router(): RouterService {

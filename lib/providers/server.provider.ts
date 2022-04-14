@@ -1,5 +1,7 @@
 import { Provider } from './provider.ts';
 
+import { IConnectionInfo } from '../@types/interfaces/server.interface.ts';
+
 import { ServerConfig } from '../configs/server.config.ts';
 
 import { ServerHandleService } from '../services/server/server-handle.service.ts';
@@ -24,28 +26,36 @@ export class ServerProvider extends Provider{
     }
 
     async boot() {
-        const server = this.app.use("server");
-        const serverHandle = this.app.use('server/handle');
-        const router = this.app.use('router');
-        const routerHistory = this.app.use('router/history');
-        const routerStatics = this.app.use('router/statics');
+        const $server = this.app.use("server");
+        const $serverHandle = this.app.use('server/handle');
 
-        const { statics } = this.app.config("paths");
+        const $request = this.app.use('request');
 
-        routerStatics.setStatics(statics);
+        const $router = this.app.use('router');
+        const $routerHistory = this.app.use('router/history');
+        const $routerStatics = this.app.use('router/statics');
 
-        serverHandle.applyHandleRequest(async (request: Request) => {
-            routerHistory.lookRequest(request);
+        const { statics, app } = this.app.config("paths");
 
-            router.lookHistory(routerHistory);
+        $routerStatics.setStatics(statics);
 
-            router.lookStatics(routerStatics);
+        $router.setPathController(app);
 
-            router.lookRequest(request);
+        $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {
+            $request.lookRequest(request);
+            $request.lookConnectionInfo(connection);
 
-            return await router.lookPetitions();
+            $routerHistory.lookRequest(request);
+
+            $router.lookHistory($routerHistory);
+
+            $router.lookStatics($routerStatics);
+
+            $router.lookRequest(request);
+
+            return await $router.lookPetitions();
         });
 
-        await server.initServer();
+        await $server.initServer();
     }
 }

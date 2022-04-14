@@ -1,4 +1,4 @@
-import { Inject } from '../../../../lib/utils.ts';
+import { Inject } from '@lara-io/utils';
 
 export default class HomeController {
     @Inject

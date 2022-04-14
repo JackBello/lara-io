@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-inferrable-types
 import { Service } from '../services.ts';
 
 import { Async } from '../../dep.ts';
@@ -8,19 +9,15 @@ import { ServerHandleService } from './server-handle.service.ts';
 
 const { delay } = Async;
 
-const _DEFAULT_ = {
-    ERROR_SERVER_CLOSED: "Server closed",
-    HTTPS_PORT: 443,
-    HTTP_PORT: 80,
-    INITIAL_ACCEPT_BACKOFF_DELAY: 5,
-    MAX_ACCEPT_BACKOFF_DELAY: 1000
-};
-
 export class ServerService extends Service {
     protected _closedConnection_ = false;
 
     protected _listeners_: Set<Deno.Listener> = new Set();
     protected _httpConnections_: Set<Deno.HttpConn> = new Set();
+
+    protected __errorServerClosed = "Server closed";
+    protected __initialAcceptBackoffDelay: number = 5;
+    protected __maxAcceptBackoffDelay: number = 1000;
 
     public async initServer(): Promise<void> {
         const {
@@ -29,7 +26,7 @@ export class ServerService extends Service {
         }: ISettingServer = this.app.config("server");
 
         if(this._closedConnection_) {
-            throw new Deno.errors.Http(_DEFAULT_.ERROR_SERVER_CLOSED);
+            throw new Deno.errors.Http(this.__errorServerClosed);
         }
 
         const listener = Deno.listen({
@@ -41,8 +38,8 @@ export class ServerService extends Service {
         return await this.serve(listener);
     }
 
-    protected async serve(listener: Deno.Listener): Promise<void> {
-        if (this._closedConnection_) throw new Deno.errors.Http(_DEFAULT_.ERROR_SERVER_CLOSED)
+    public async serve(listener: Deno.Listener): Promise<void> {
+        if (this._closedConnection_) throw new Deno.errors.Http(this.__errorServerClosed);
 
         this.trackListener(listener);
 
@@ -50,6 +47,7 @@ export class ServerService extends Service {
             return await this.accept(listener);
         } finally {
             this.untrackListener(listener);
+
             try {
                 listener.close();
             } catch {
@@ -65,29 +63,23 @@ export class ServerService extends Service {
             let connection: Deno.Conn;
 
             try {
-                // Wait for a new connection.
                 connection = await listener.accept();
             } catch (error) {
                 if (
-                    // The listener is closed.
                     error instanceof Deno.errors.BadResource ||
-                    // TLS handshake errors.
                     error instanceof Deno.errors.InvalidData ||
                     error instanceof Deno.errors.UnexpectedEof ||
                     error instanceof Deno.errors.ConnectionReset ||
                     error instanceof Deno.errors.NotConnected
                 ) {
-                    // Backoff after transient errors to allow time for the system to
-                    // recover, and avoid blocking up the event loop with a continuously
-                    // running loop.
                     if (!acceptBackoffDelay) {
-                        acceptBackoffDelay = _DEFAULT_.INITIAL_ACCEPT_BACKOFF_DELAY;
+                        acceptBackoffDelay = this.__initialAcceptBackoffDelay;
                     } else {
                         acceptBackoffDelay *= 2;
                     }
 
-                    if (acceptBackoffDelay >= _DEFAULT_.MAX_ACCEPT_BACKOFF_DELAY) {
-                        acceptBackoffDelay = _DEFAULT_.MAX_ACCEPT_BACKOFF_DELAY;
+                    if (acceptBackoffDelay >= this.__maxAcceptBackoffDelay) {
+                        acceptBackoffDelay = this.__maxAcceptBackoffDelay;
                     }
 
                     await delay(acceptBackoffDelay);
@@ -100,18 +92,14 @@ export class ServerService extends Service {
 
             acceptBackoffDelay = undefined;
 
-            // "Upgrade" the network connection into an HTTP connection.
             let httpConnection: Deno.HttpConn;
 
             try {
                 httpConnection = Deno.serveHttp(connection);
             } catch {
-                // Connection has been closed.
                 continue;
             }
-
-            // Closing the underlying listener will not close HTTP connections, so we
-            // track for closure upon server close.
+            
             this.trackHttpConnection(httpConnection);
 
             const connectionInfo: IConnectionInfo = {
@@ -119,15 +107,12 @@ export class ServerService extends Service {
                 remoteAddr: connection.remoteAddr,
             };
 
-            // Serve the requests that arrive on the just-accepted connection. Note
-            // we do not await this async method to allow the server to accept new
-            // connections.
             this.http(httpConnection, connectionInfo);
         }
     }
 
     protected close(): void {
-        if (this._closedConnection_) throw new Deno.errors.Http(_DEFAULT_.ERROR_SERVER_CLOSED)
+        if (this._closedConnection_) throw new Deno.errors.Http(this.__errorServerClosed)
 
         this._closedConnection_ = true;
 
@@ -150,20 +135,13 @@ export class ServerService extends Service {
             let requestEvent: Deno.RequestEvent | null;
 
             try {
-                // Yield the new HTTP request on the connection.
                 requestEvent = await httpConnection.nextRequest();
             } catch {
-                // Connection has been closed.
                 break;
             }
 
-            if (requestEvent === null) {
-                // Connection has been closed.
-                break;
-            }
+            if (requestEvent === null) break;
 
-            // Respond to the request. Note we do not await this async method to
-            // allow the connection to handle multiple requests in the case of h2.
             this.respond(requestEvent, httpConnection, connectionInfo);
         }
 
@@ -178,21 +156,15 @@ export class ServerService extends Service {
 
         try {
             request = requestEvent.request;
-            // Handle the request event, generating a response.
-            response = await handle.getHandleRequest(handle.getRequest(request), connectionInfo);
+            response = await handle.getHandleRequest(request, connectionInfo);
         } catch (error: unknown) {
             request = requestEvent.request;
-            // Invoke onError handler when request handler throws.
-            response = await handle.getHandleError(error);
+            response = await handle.getHandleError(error, request);
         }
 
         try {
-            // Send the response.
             await requestEvent.respondWith(response);
         } catch {
-            // respondWith() fails when the connection has already been closed, or there is some
-            // other error with responding on this connection that prompts us to
-            // close it and open a new connection.
             return this.closeHttpConnection(httpConnection);
         }
     }

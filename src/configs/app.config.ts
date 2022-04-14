@@ -1,4 +1,4 @@
-import { FundationProvider } from '../../lib/providers.ts';
+import { FundationProvider } from '@lara-io/providers';
 
 import { IAppConfig } from '../../lib/@types/interfaces/configs.interface.ts';
 

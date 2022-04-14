@@ -1,4 +1,4 @@
-import { THandleResponse, THandleRequest, THandleError, TResponse, TRequest } from '../../@types/type/server.type.ts'
+import { THandleResponse, THandleRequest, THandleError, TResponse } from '../../@types/type/server.type.ts'
 
 import { Service } from '../services.ts'
 
@@ -14,13 +14,6 @@ export class ServerHandleService extends Service{
         return this._handleResponse("Internal Server Error", 500);
     };
 
-    protected _request: (request: TRequest) => TRequest = (request: TRequest): TRequest => {
-        return request;
-    }
-    protected _response: (response: TResponse) => TResponse = (response: TResponse): TResponse => {
-        return response;
-    }
-
     public applyHandleResponse(handle: THandleResponse): void {
         this._handleResponse = handle;
     }
@@ -33,14 +26,6 @@ export class ServerHandleService extends Service{
         this._handleError = handle;
     }
 
-    public applyResponse(handle: (response: TResponse) => TResponse) {
-        this._response = handle;
-    }
-
-    public applyRequest(handle: (request: TRequest) => TRequest) {
-        this._request = handle;
-    }
-
     get getHandleResponse() {
         return this._handleResponse;
     }
@@ -51,9 +36,5 @@ export class ServerHandleService extends Service{
 
     get getHandleError() {
         return this._handleError;
-    }
-
-    get getRequest() {
-        return this._request;
     }
 }

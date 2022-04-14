@@ -7,4 +7,4 @@ export type THandleRequest = (request?: TRequest, ...args: Array<any>) => TRespo
 export type THandleError = (error: unknown, request?: TRequest) => TResponse;
 
 export type TMethodHTTP = "GET" | "POST" | "DELETE" | "PUT" | "OPTIONS" | "PATCH";
-export type TAllMethodHTTP = string | "GET" | "POST" | "DELETE" | "PUT" | "OPTIONS" | "PATCH";
+export type TAllMethodHTTP = string | "GET" | "POST" | "DELETE" | "PUT" | "OPTIONS" | "PATCH" | "HEAD" | "CONNECT" | "TRACE";

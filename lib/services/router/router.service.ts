@@ -43,10 +43,20 @@ export class RouterService extends Service {
     protected __history?: RouterHistoryService;
     protected __request?: TRequest;
     protected __pattern?: URLPattern;
+    protected __pathController?: string;
+    protected __pathMiddleware?: string;
     protected __url?: string;
 
     get routes() {
         return this.__routes;
+    }
+
+    public setPathController(url: string) {
+        this.__pathController = `${url}/http/controllers/`;
+    }
+
+    public setPathMiddleware(url: string) {
+        this.__pathMiddleware = url;
     }
 
     protected makePattern(uri: string, patterns: string | string[] = "") {
@@ -133,11 +143,12 @@ export class RouterService extends Service {
         return route;
     }
 
-    protected loadController(action: any, uri: string, pattern?: string | string[]) {
-        let request: Request;
+    protected async loadController(action: any, uri: string, pattern?: string | string[]) {
+        // let request;
 
         if (!this.__request) throw new Error("the request undefined");
-        else request = this.__request;
+
+        const $request = this.app.use("request");
 
         if (Array.isArray(action)) {
             const makeController = new action[0];
@@ -147,9 +158,9 @@ export class RouterService extends Service {
             if (dependencies.length > 0) {
                 return makeController[action[1]].apply(makeController, ...dependencies);
             } else {
-                return makeController[action[1]].apply(makeController, request);
+                return makeController[action[1]].apply(makeController, $request);
             }
-        } else {
+        } else if(typeof action === "function") {
             let params: Array<any> = [];
 
             if (pattern) params = this.makePattern(uri, pattern);
@@ -157,7 +168,47 @@ export class RouterService extends Service {
 
             if (params.length) return action(...params);
 
-            return action(request);
+            return action($request);
+        } else if(typeof action === "string"){
+            const [name, method]: string[] = action.split("@");
+
+            if (name.indexOf(".") !== -1) {
+                const file = `${name}.ts`;
+                const pathname = getBasePath(`${this.__pathController}${file}`);
+                const controller = await import(pathname);
+
+                const makeController = new controller.default();
+
+                const dependencies: any[] = this.app.resolveDependencies(controller.default, method);
+
+                if (dependencies.length > 0) {
+                    return makeController[method].apply(makeController, ...dependencies);
+                } else {
+                    return makeController[method].apply(makeController, $request);
+                }
+            }
+
+            try {
+                const stat = Deno.statSync(`${this.__pathController}${name}`);
+
+                if (stat.isFile) {
+                    //
+                }
+            } catch {
+                const file = name.toLowerCase().replace("controller", ".controller.ts");
+                const pathname = getBasePath(`${this.__pathController}${file}`);
+                const controller = await import(pathname);
+
+                const makeController = new controller.default();
+
+                const dependencies: any[] = this.app.resolveDependencies(controller.default, method);
+
+                if (dependencies.length > 0) {
+                    return makeController[method].apply(makeController, ...dependencies);
+                } else {
+                    return makeController[method].apply(makeController, $request);
+                }
+            }
         }
     }
 
@@ -195,9 +246,7 @@ export class RouterService extends Service {
         if (typeof uri !== "string") throw new TypeError('typeof uri must be a string');
         if (typeof method !== "string" || Array.isArray(method)) throw new TypeError('typeof uri must be a string');
 
-        if (typeof action !== "function") {
-            if (!Array.isArray(action)) throw new TypeError('typeof action must be a function or array');
-        }
+        if (typeof action !== "function" && typeof action !== "string" && !Array.isArray(action)) throw new TypeError('typeof action must be a function, string or array');
 
         // let groupMiddleware: Array<any>;
         // if (this.__group.middleware) groupMiddleware = this.__group.middleware;
@@ -299,9 +348,14 @@ export class RouterService extends Service {
     public group(routes: any): Promise<void> | void {
         if (typeof routes === "string") {
             return new Promise(resolve => {
-                this.registerRoutes(routes);
-
-                resolve();
+                this.registerRoutes(routes).then(() => {
+                    if (this.__group.middleware) this.__group.middleware = undefined;
+                    if (this.__group.controller) this.__group.controller = undefined;
+                    if (this.__group.domain) this.__group.domain = undefined;
+                    if (this.__group.prefix) this.__group.prefix = undefined;
+                    if (this.__group.name) this.__group.name = undefined;
+                    resolve();
+                });
             })
         } else {
             routes();
@@ -359,7 +413,7 @@ export class RouterService extends Service {
 
             if (this.__history) this.__history.handleHistory(route);
 
-            const action = this.loadController(route.action, route.uri, route.pattern);
+            const action = await this.loadController(route.action, route.uri, route.pattern);
 
             return this.handleResponse(action);
         } catch (error) {

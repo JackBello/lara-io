@@ -1,8 +1,10 @@
-import { Route } from '../../../lib/fecades.ts';
+import { Route } from '@lara-io/fecades';
 
-import HomeController from '../../app/http/controllers/home.controllers.ts';
+import { TRequestService } from '../../../lib/@types/request.type.ts';
 
-Route.get("/", "index", [HomeController, "index"]);
+// import HomeController from '../../app/http/controllers/home.controller.ts';
+
+Route.get("/", "index", "home.controller@index");
 
 Route.view("/home", "home", { data: "Welcome", name: "Deno" });
 
@@ -27,7 +29,9 @@ Route.prefix("user").group(() => {
     });
 });
 
-Route.get("/cars", "cars", () => {
+Route.get("/cars", "cars", (request: TRequestService) => {
+    console.log(request);
+
     return "cars";
 });
 

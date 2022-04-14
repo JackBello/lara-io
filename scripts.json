@@ -1,5 +1,5 @@
 {
   "scripts": {
-    "start": "deno run -c tsconfig.json --allow-read --allow-write --allow-net --allow-env index.ts"
+    "start": "deno run -c tsconfig.json --allow-read --allow-write --allow-net --allow-env --import-map=paths.json src/main.ts"
   }
 }
