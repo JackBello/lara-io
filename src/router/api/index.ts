@@ -5,7 +5,7 @@ Route.get("/", "", () => {
         name: "Deno",
         version: Deno.version.deno,
         typescript: Deno.version.typescript,
-        v9: Deno.version.v8,
+        v8: Deno.version.v8,
     }
 
     return new Response(JSON.stringify(data), {
