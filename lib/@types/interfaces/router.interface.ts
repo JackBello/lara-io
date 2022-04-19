@@ -5,7 +5,7 @@ interface IRouterFile {
     name: string;
     subdomain?: string;
     path: string;
-    uri: string;
+    uri?: string;
 }
 
 interface IGroupConfig extends IGroup {
@@ -19,7 +19,7 @@ interface IRouteConfig extends IRoute {
 export interface IRouterConfig {
     mode: "hash" | "history";
     files: Array<IRouterFile>;
-    routes: Array<IRouteConfig>;
+    routes?: Array<IRouteConfig>;
 }
 
 export interface IGroup {

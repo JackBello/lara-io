@@ -1,10 +1,7 @@
-// deno-lint-ignore-file
-import { Service } from '../services.ts';
-
-import { TRequestService } from '../../@types/request.type.ts';
-
+// deno-lint-ignore-file no-explicit-any
 import { IConnectionInfo } from '../../@types/interfaces/server.interface.ts';
-export class RequestService extends Service {
+
+export class RequestRoute {
     protected __urlPattern?: URLPattern;
     protected __coneccionInfo?: IConnectionInfo;
     protected __request?: Request;

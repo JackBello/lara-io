@@ -149,7 +149,7 @@ export class ServerService extends Service {
     }
 
     protected async respond(requestEvent: Deno.RequestEvent, httpConnection: Deno.HttpConn, connectionInfo: IConnectionInfo) {
-        const handle: ServerHandleService = this.app.use("server/handle");
+        const handle: ServerHandleService = this.app.service("server/handle");
 
         let response: Response;
         let request: Request;

@@ -2,9 +2,10 @@ import { Provider } from './provider.ts';
 
 import { IConnectionInfo } from '../@types/interfaces/server.interface.ts';
 
-import { TemplateService } from '../services/template/template.service.ts';
+import { TemplateEngineService } from '../services/template/template-engine.service.ts';
+import { EngineAtom } from '../services/template/engine-atom.service.ts';
 
-import { RequestService } from '../services/request/request.service.ts';
+import { RequestRoute } from '../fundation/router/request.ts';
 
 import { RouterStaticsService } from '../services/router/router-statics.service.ts'
 import { RouterHistoryService } from '../services/router/router-history.service.ts';
@@ -17,13 +18,19 @@ import { ServerService } from '../services/server/server.service.ts';
 
 export class FundationProvider extends Provider{
     register() {
-        this.app.registerService("template", TemplateService, {
+        this.app.registerService("template/engine", TemplateEngineService, {
             isSingleton: true,
             isCallback: true,
             configService: {}
         });
 
-        this.app.registerService("request", RequestService, {
+        this.app.registerService("template/engine/atom", EngineAtom, {
+            isSingleton: true,
+            isCallback: true,
+            configService: {}
+        });
+
+        this.app.register("request", RequestRoute, {
             isSingleton: true,
             isCallback: true,
             configService: {}
@@ -62,22 +69,33 @@ export class FundationProvider extends Provider{
     }
 
     async boot() {
-        const $server = this.app.use("server");
-        const $serverHandle = this.app.use('server/handle');
+        const $server = this.app.service("server");
+        const $serverHandle = this.app.service('server/handle');
 
         const $request = this.app.use('request');
 
-        const $router = this.app.use('router');
-        const $routerHistory = this.app.use('router/history');
-        const $routerStatics = this.app.use('router/statics');
+        const $router = this.app.service('router');
+        const $routerHistory = this.app.service('router/history');
+        const $routerStatics = this.app.service('router/statics');
 
-        const { statics, app } = this.app.config("paths");
+        const $templateEngine = this.app.service('template/engine');
+        const $atomEngine = this.app.service("template/engine/atom");
+
+        const { statics, app, resources } = this.app.config("paths");
+
+        $templateEngine.lookResources(resources);
+
+        $templateEngine.setEngine("atom");
+
+        $templateEngine.registerEngine("atom", $atomEngine);
 
         $routerStatics.setStatics(statics);
 
         $router.setPathController(app);
 
-        $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {
+        $router.lookTemplate($templateEngine);
+
+        $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {            
             $request.lookRequest(request);
             $request.lookConnectionInfo(connection);
 

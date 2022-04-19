@@ -6,11 +6,7 @@ export default (): IRouterConfig => ({
     files: [
         {
             name: "web",
-            subdomain: "www",
             path: "src/router/web/index.ts",
-            uri: "/",
         }
-    ],
-
-    routes: []
+    ]
 })

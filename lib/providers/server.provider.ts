@@ -26,20 +26,14 @@ export class ServerProvider extends Provider{
     }
 
     async boot() {
-        const $server = this.app.use("server");
-        const $serverHandle = this.app.use('server/handle');
+        const $server = this.app.service("server");
+        const $serverHandle = this.app.service('server/handle');
 
         const $request = this.app.use('request');
 
-        const $router = this.app.use('router');
-        const $routerHistory = this.app.use('router/history');
-        const $routerStatics = this.app.use('router/statics');
-
-        const { statics, app } = this.app.config("paths");
-
-        $routerStatics.setStatics(statics);
-
-        $router.setPathController(app);
+        const $router = this.app.service('router');
+        const $routerHistory = this.app.service('router/history');
+        const $routerStatics = this.app.service('router/statics');
 
         $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {
             $request.lookRequest(request);

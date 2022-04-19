@@ -1,8 +1,10 @@
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any no-this-alias
 import { Service } from '../services.ts';
 
 import { RouterHistoryService } from './router-history.service.ts';
 import { RouterStaticsService } from './router-statics.service.ts';
+
+import { TemplateEngineService } from '../template/template-engine.service.ts';
 
 import { IRoute, ISettingRoute, IGroup } from '../../@types/interfaces/router.interface.ts';
 import { TRequest, TResponse, TAllMethodHTTP, TMethodHTTP } from '../../@types/type/server.type.ts';
@@ -39,6 +41,7 @@ export class RouterService extends Service {
         name: undefined
     }
 
+    protected __template?: TemplateEngineService;
     protected __statics?: RouterStaticsService;
     protected __history?: RouterHistoryService;
     protected __request?: TRequest;
@@ -149,16 +152,16 @@ export class RouterService extends Service {
         if (!this.__request) throw new Error("the request undefined");
 
         const $request = this.app.use("request");
-
+        
         if (Array.isArray(action)) {
             const makeController = new action[0];
 
-            const dependencies: any[] = this.app.resolveDependencies(action[0], action[1]);
+            const dependencies: any[] = this.app.resolveDependencies(action[0], action[1]);            
 
             if (dependencies.length > 0) {
-                return makeController[action[1]].apply(makeController, ...dependencies);
+                return makeController[action[1]].call(makeController, ...dependencies);
             } else {
-                return makeController[action[1]].apply(makeController, $request);
+                return makeController[action[1]].call(makeController, $request);
             }
         } else if(typeof action === "function") {
             let params: Array<any> = [];
@@ -182,9 +185,9 @@ export class RouterService extends Service {
                 const dependencies: any[] = this.app.resolveDependencies(controller.default, method);
 
                 if (dependencies.length > 0) {
-                    return makeController[method].apply(makeController, ...dependencies);
+                    return makeController[method].call(makeController, ...dependencies);
                 } else {
-                    return makeController[method].apply(makeController, $request);
+                    return makeController[method].call(makeController, $request);
                 }
             }
 
@@ -321,24 +324,17 @@ export class RouterService extends Service {
     }
     
     public view(uri: string, view: string, data: any = {}) {
-        const { resources } = this.app.config("paths");
-        const template = this.app.use("template");
+        if (!this.__template) throw new Error("template must be given");
 
-        const path = getBasePath(`${resources}/views/${view}.atom.ts`);
+        const self = this;
 
-        import(path).then((module: any) => {
-            if (typeof module.default !== "function") throw new Error("the view must be a function");
-
-            this.registerRoute({
-                uri,
-                name: view,
-                method: "GET",
-            }, () => {
-                return new Response(template.render(module.default(), data), { headers: { "Content-Type": "text/html" }, status: 200 });
-            });
+        this.registerRoute({
+            uri,
+            name: view,
+            method: "GET",
+        }, async () => {
+            return await self.__template?.view(view, data);
         });
-
-        return this;
     }
 
     protected async registerRoutes(routes: string): Promise<void> {
@@ -391,6 +387,10 @@ export class RouterService extends Service {
     public name(name: string) {
         this.__group.name = name;
         return this;
+    }
+
+    public lookTemplate(template: TemplateEngineService) {
+        this.__template = template;
     }
 
     public lookStatics(statics: RouterStaticsService) {
