@@ -10,8 +10,12 @@ export function app() {
     return Container.instance;
 }
 
+export function view() {
+    return app().make("@service/template/engine", {});
+}
+
 export function request(): TRequestService {
-    return app().make('@service/request', {}).request;
+    return app().make('@/request', {});
 }
 
 export function router(): RouterService {

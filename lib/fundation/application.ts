@@ -12,6 +12,7 @@ export class Application {
     protected instance: Application = this;
 
     protected _name_: string;
+    protected _customs: string[];
     protected _configs: string[];
     protected _services: string[];
     protected _providers: string[];
@@ -19,6 +20,7 @@ export class Application {
 
     constructor(name: string) {
         this._name_ = name;
+        this._customs = [];
         this._configs = [];
         this._services = [];
         this._providers = [];
@@ -70,6 +72,10 @@ export class Application {
     }
 
     public use(name: string) {
+        return this.__container.make(`@/${name}`, {});
+    }
+
+    public service(name: string) {
         return this.__container.make(`@service/${name}`, {});
     }
 
@@ -111,7 +117,7 @@ export class Application {
         for(const paramType of paramsTypes) {
             if(!validateTypes[paramType]) {
                 if (paramType.indexOf("Service") !== -1) {
-                    service = this.use(paramType.replace("Service", "").toLowerCase());
+                    service = this.service(paramType.replace("Service", "").toLowerCase());
                 } else {
                     service = this.config(paramType.toLowerCase());
                 }
@@ -125,6 +131,35 @@ export class Application {
         }
 
         return resolve;
+    }
+
+    public register(
+        name: string,
+        instance: any,
+        settings: TSettingRegisterSevice = {
+        configService: {},
+        isCallback: true,
+        isSingleton: false
+    }) {
+        if (settings.isSingleton) {
+            if (settings.isCallback) {
+                this.__container.singleton(`@/${name}`, () => {
+                    return new instance();
+                });
+            } else {
+                this.__container.singletonInstance(`@/${name}`, instance);
+            }
+        } else {
+            if (settings.isCallback) {
+                this.__container.bind(`@/${name}`, () => {
+                    return new instance();
+                });
+            } else {
+                this.__container.bindInstance(`@/${name}`, instance);
+            }
+        }
+
+        this._customs.push(`@/${name}`);
     }
 
     public registerProvider(name: string, instance: any) {

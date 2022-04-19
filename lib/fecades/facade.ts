@@ -56,6 +56,8 @@ export class Fecade {
         let resolvedInstance;
         if (name === "app") {
             resolvedInstance = Fecade.container.make(`@${name}`, {});
+        } else if (name.startsWith("@/")) {
+            resolvedInstance = Fecade.container.make(`@/${name}`, {});
         } else {
             resolvedInstance = Fecade.container.make(`@service/${name}`, {});
         }

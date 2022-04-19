@@ -18,5 +18,5 @@ export type TRoute = {
 
     redirect: (url: string) => Response | any;
 
-    view: (url: string, view: string, data: any) => Promise<void>;
+    view: (url: string, view: string, data?: any) => Promise<void>;
 }

@@ -25,7 +25,18 @@ export class RouterProvider extends Provider{
         });
     }
 
-    async boot() {
+    boot() {
+        const $templateEngine = this.app.service('template/engine');
 
+        const $router = this.app.service('router');
+        const $routerStatics = this.app.service('router/statics');
+
+        const { statics, app } = this.app.config("paths");
+
+        $routerStatics.setStatics(statics);
+
+        $router.setPathController(app);
+
+        $router.lookTemplate($templateEngine);
     }
 }

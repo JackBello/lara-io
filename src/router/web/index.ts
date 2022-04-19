@@ -2,11 +2,13 @@ import { Route } from '@lara-io/fecades';
 
 import { TRequestService } from '../../../lib/@types/request.type.ts';
 
-// import HomeController from '../../app/http/controllers/home.controller.ts';
+import HomeController from '../../app/http/controllers/home.controller.ts';
 
-Route.get("/", "index", "home.controller@index");
+Route.get("/", "index", [HomeController, "index"]);
 
-Route.view("/home", "home", { data: "Welcome", name: "Deno" });
+await Route.view("/atom", "test", { data: "Welcome", name: "Deno", history: "papa" });
+
+await Route.view("/atom2", "home.ts");
 
 Route.get("/contact", "contact", () => {
     return "contact";

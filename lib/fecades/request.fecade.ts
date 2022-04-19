@@ -4,7 +4,7 @@ import { TRequestService } from '../@types/request.type.ts';
 
 class RequestFecade extends Fecade {
     constructor() {
-        super("request");
+        super("@/request");
     }
 }
 
