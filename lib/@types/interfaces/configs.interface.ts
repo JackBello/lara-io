@@ -38,7 +38,7 @@ export interface IPath {
 }
 
 export interface IAppConfig {
-    name: string;
+    name: any;
     paths: IPath;
     providers: IProviders[];
     services: IServices[];
