@@ -16,6 +16,8 @@ import { ServerHandleService } from '../services/server/server-handle.service.ts
 import { ServerConfig } from '../configs/server.config.ts';
 import { ServerService } from '../services/server/server.service.ts';
 
+import { StorageService } from '../services/storage/storage.service.ts';
+
 export class FundationProvider extends Provider{
     register() {
         this.app.registerService("template/engine", TemplateEngineService, {
@@ -66,6 +68,12 @@ export class FundationProvider extends Provider{
             isCallback: true,
             configService: {}
         });
+        
+        this.app.registerService('storage', StorageService, {
+            isSingleton: true,
+            isCallback: true,
+            configService: {}
+        });
     }
 
     async boot() {
@@ -81,8 +89,12 @@ export class FundationProvider extends Provider{
         const $templateEngine = this.app.service('template/engine');
         const $atomEngine = this.app.service("template/engine/atom");
 
+        const $storage = this.app.service('storage');
+
         const { statics, app, resources } = this.app.config("paths");
 
+        $storage.initStorage();
+        
         $templateEngine.lookResources(resources);
 
         $templateEngine.setEngine("atom");

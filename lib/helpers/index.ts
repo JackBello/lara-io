@@ -6,6 +6,8 @@ import { ServerService } from '../services/server/server.service.ts';
 
 import { TRequestService } from '../@types/request.type.ts';
 
+import { StorageService } from '../services/storage/storage.service.ts';
+
 export function app() {
     return Container.instance;
 }
@@ -28,4 +30,8 @@ export function server(): ServerService {
 
 export function history(): RouterHistoryService {
     return app().make('@service/router/history', {});
+}
+
+export function storage(): StorageService {
+    return app().make('@service/storage', {});
 }

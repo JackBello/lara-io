@@ -38,3 +38,7 @@ export function envHas(key: string): boolean {
 export function getBasePath(path: string): string {
     return toFileUrl(`${resolve(dirname(fromFileUrl(import.meta.url)), "../../")}/${path}`).href;
 }
+
+export function getPathName(path: string): string {
+    return (`${resolve(dirname(fromFileUrl(import.meta.url)), "../../")}/${path}`);
+}

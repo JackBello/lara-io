@@ -3,3 +3,4 @@ export * from '../fecades/route.fecade.ts';
 export * from '../fecades/request.fecade.ts';
 export * from '../fecades/history.fecade.ts';
 export * from '../fecades/view.fecade.ts';
+export * from '../fecades/storage.facade.ts';
