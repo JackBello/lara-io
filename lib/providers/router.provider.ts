@@ -29,14 +29,27 @@ export class RouterProvider extends Provider{
         const $templateEngine = this.app.service('template/engine');
 
         const $router = this.app.service('router');
+        const $routerHistory = this.app.service('router/history');
         const $routerStatics = this.app.service('router/statics');
 
-        const { statics, app } = this.app.config("paths");
+        const { statics } = this.app.config("paths");
 
-        $routerStatics.setStatics(statics);
+        const { http } = this.app.config("paths/app");
 
-        $router.setPathController(app);
+        const { hostname } = this.app.config("server");
 
-        $router.lookTemplate($templateEngine);
+        $routerStatics.setPathStatics(statics);
+
+        $router.sethostname(hostname);
+
+        $router.setPathController(http);
+
+        $router.setPathMiddleware(http);
+
+        $router.useTemplate($templateEngine);
+
+        $router.useHistory($routerHistory);
+
+        $router.useFileStatic($routerStatics);
     }
 }

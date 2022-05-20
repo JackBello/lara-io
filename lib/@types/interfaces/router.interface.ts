@@ -2,10 +2,9 @@
 import { TMethodHTTP } from '../type/server.type.ts';
 
 interface IRouterFile {
-    name: string;
+    prefix?: string;
     subdomain?: string;
     path: string;
-    uri?: string;
 }
 
 interface IGroupConfig extends IGroup {
@@ -17,43 +16,39 @@ interface IRouteConfig extends IRoute {
 }
 
 export interface IRouterConfig {
-    mode: "hash" | "history";
+    strict: boolean;
     files: Array<IRouterFile>;
     routes?: Array<IRouteConfig>;
 }
 
 export interface IGroup {
-    middleware?: Array<any> | any;
-    controller?: any;
-    domain?: string;
-    prefix?: string;
-    name?: string;
+    [key: string]: any[];
 }
 export interface IRoute {
     uri: string,
     name?: string,
     method?: TMethodHTTP | Array<TMethodHTTP>;
     middleware?: Array<any> | any;
-    pattern?: string | string[];
-    action: any;
+    regexp?: string | string[];
     dependencies?: Array<string>;
+    redirect?: boolean;
+    domain?: string;
+    action: any;
 }
 
 export interface IHistoryRoute {
     uri: string,
     name?: string,
-    query?: any;
-    params?: any;
     meta?: any;
 }
 
 export interface ISettingRoute {
     uri?: string;
     method?: TMethodHTTP | Array<TMethodHTTP>;
-    middleware?: string;
+    middleware?: any | Array<any>;
+    regexp?: string | string[];
     name?: string;
-    pattern?: string | string[];
-    dependencies?: Array<string>;
+    redirect?: boolean;
 }
 
 export interface IHistory {

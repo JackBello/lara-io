@@ -1,5 +1,4 @@
 export * from '../services/template/template-engine.service.ts';
-export * from '../services/template/engine-atom.service.ts';
 export * from '../services/router/router-history.service.ts';
 export * from '../services/router/router-statics.service.ts';
 export * from '../services/router/router.service.ts';
