@@ -3,9 +3,9 @@ import { Provider } from './provider.ts';
 import { IConnectionInfo } from '../@types/interfaces/server.interface.ts';
 
 import { TemplateEngineService } from '../services/template/template-engine.service.ts';
-import { EngineAtom } from '../services/template/engine-atom.service.ts';
+import { EngineAtom } from '../services/template/atom.engine.ts';
 
-import { RequestRoute } from '../fundation/router/request.ts';
+import { HttpRequest } from '../fundation/http/request/request.ts';
 
 import { RouterStaticsService } from '../services/router/router-statics.service.ts'
 import { RouterHistoryService } from '../services/router/router-history.service.ts';
@@ -13,7 +13,6 @@ import { RouterService } from '../services/router/router.service.ts';
 
 import { ServerHandleService } from '../services/server/server-handle.service.ts';
 
-import { ServerConfig } from '../configs/server.config.ts';
 import { ServerService } from '../services/server/server.service.ts';
 
 export class FundationProvider extends Provider{
@@ -24,13 +23,13 @@ export class FundationProvider extends Provider{
             configService: {}
         });
 
-        this.app.registerService("template/engine/atom", EngineAtom, {
+        this.app.register("engine/atom", EngineAtom, {
             isSingleton: true,
             isCallback: true,
             configService: {}
         });
 
-        this.app.register("request", RequestRoute, {
+        this.app.register("http/request", HttpRequest, {
             isSingleton: true,
             isCallback: true,
             configService: {}
@@ -60,7 +59,6 @@ export class FundationProvider extends Provider{
             configService: {}
         });
 
-        this.app.registerConfig('server', ServerConfig);
         this.app.registerService('server', ServerService, {
             isSingleton: true,
             isCallback: true,
@@ -69,43 +67,51 @@ export class FundationProvider extends Provider{
     }
 
     async boot() {
+        const $httpRequest = this.app.use('http/request');
+
         const $server = this.app.service("server");
         const $serverHandle = this.app.service('server/handle');
-
-        const $request = this.app.use('request');
 
         const $router = this.app.service('router');
         const $routerHistory = this.app.service('router/history');
         const $routerStatics = this.app.service('router/statics');
 
         const $templateEngine = this.app.service('template/engine');
-        const $atomEngine = this.app.service("template/engine/atom");
+        const $engineAtom = this.app.use("engine/atom");
 
-        const { statics, app, resources } = this.app.config("paths");
+        const { statics, resources } = this.app.config("paths");
 
-        $templateEngine.lookResources(resources);
+        const { http } = this.app.config("paths/app");
+
+        const { hostname } = this.app.config("server");
+
+        $templateEngine.setPathViews(resources);
 
         $templateEngine.setEngine("atom");
 
-        $templateEngine.registerEngine("atom", $atomEngine);
+        $templateEngine.registerEngine("atom", $engineAtom);
 
-        $routerStatics.setStatics(statics);
+        $routerStatics.setPathStatics(statics);
 
-        $router.setPathController(app);
+        $router.sethostname(hostname);
 
-        $router.lookTemplate($templateEngine);
+        $router.setPathController(http);
+
+        $router.setPathMiddleware(http);
+
+        $router.useTemplate($templateEngine);
+
+        $router.useHistory($routerHistory);
+
+        $router.useFileStatic($routerStatics);
 
         $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {            
-            $request.lookRequest(request);
-            $request.lookConnectionInfo(connection);
+            $httpRequest.setRequest(request);
+            $httpRequest.setConnection(connection);
 
-            $routerHistory.lookRequest(request);
+            $routerHistory.setUrl(request.url);
 
-            $router.lookHistory($routerHistory);
-
-            $router.lookStatics($routerStatics);
-
-            $router.lookRequest(request);
+            $router.setRequest(request);
 
             return await $router.lookPetitions();
         });

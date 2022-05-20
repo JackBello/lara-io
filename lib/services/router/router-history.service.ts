@@ -1,45 +1,46 @@
 // deno-lint-ignore-file no-inferrable-types
 import { Service } from '../services.ts';
 
-import { IRoute, IHistoryRoute } from '../../@types/interfaces/router.interface.ts';
-import { TResponse, TRequest } from '../../@types/type/server.type.ts';
+import Route from './route.ts'
+
+import { IHistoryRoute } from '../../@types/interfaces/router.interface.ts';
+import { TResponse } from '../../@types/type/server.type.ts';
 
 export class RouterHistoryService extends Service {
-    protected _mode: "hash" | "history" = "history";
-    protected _previusRoute: IHistoryRoute[] = [];
-    protected _currentRoute: IHistoryRoute[] = [];
-    protected _nextsRoute: IHistoryRoute[] = [];
-    protected _cacheHistory: IHistoryRoute[] = [];
-    protected _hostname: string = "";
+    protected __previusRouteHistory: IHistoryRoute[] = [];
+    protected __currentRouteHistory: IHistoryRoute[] = [];
+    protected __nextsRouteHistory: IHistoryRoute[] = [];
+    protected __cacheHistory: IHistoryRoute[] = [];
+    protected __url: string = "";
 
-    public handleHistory = (route: IRoute, cache: boolean = false): void => {
-        if (this._currentRoute.length === 0) {
+    public handleHistory = (route: Route, cache: boolean = false): void => {
+        if (this.__currentRouteHistory.length === 0) {
             if (cache) {
-                this._cacheHistory.push({
+                this.__cacheHistory.push({
                     uri: route.uri,
                     name: route.name,
                 });
             }
 
-            this._currentRoute.push({
+            this.__currentRouteHistory.push({
                 uri: route.uri,
                 name: route.name,
             });
         }
 
-        if (this._currentRoute.length !== 0) {
-            this._previusRoute.push(this._currentRoute[0]);
+        if (this.__currentRouteHistory.length !== 0) {
+            this.__previusRouteHistory.push(this.__currentRouteHistory[0]);
 
-            this._currentRoute.pop();
+            this.__currentRouteHistory.pop();
 
             if (cache) {
-                this._cacheHistory.push({
+                this.__cacheHistory.push({
                     uri: route.uri,
                     name: route.name,
                 });
             }
 
-            this._currentRoute.push({
+            this.__currentRouteHistory.push({
                 uri: route.uri,
                 name: route.name,
             });
@@ -47,83 +48,77 @@ export class RouterHistoryService extends Service {
     }
 
     public clearHistory(): void {
-        this._previusRoute = [];
-        this._currentRoute = [];
-        this._nextsRoute = [];
+        this.__previusRouteHistory = [];
+        this.__currentRouteHistory = [];
+        this.__nextsRouteHistory = [];
     }
 
     public clearCacheHistory(): void {
-        this._cacheHistory = [];
+        this.__cacheHistory = [];
     }
 
-    public lookRequest(request: TRequest): void {
-        this._hostname = request.url;
+    public setUrl(url: string): void {
+        this.__url = url;
     }
 
     public redirect(uri?: string, status: number = 302): TResponse {
         if (uri) {
             let backslash: string;
 
+            const urlPattern = new URLPattern(this.__url);
+
             if (uri.slice(0, 1) === "/") backslash = "";
             else backslash = "/";
     
-            return Response.redirect(`${this._hostname}${backslash}${uri}`, status);
+            return Response.redirect(`${urlPattern.protocol}:\\${urlPattern.hostname}${backslash}${uri}`, status);
         }
     }
 
     public back(cache: boolean = false): TResponse {
-        if (this._previusRoute.length === 0) return;
+        if (this.__previusRouteHistory.length === 0) return;
 
-        this._nextsRoute.unshift(this._currentRoute[0]);
+        this.__nextsRouteHistory.unshift(this.__currentRouteHistory[0]);
 
-        this._currentRoute.pop();
+        this.__currentRouteHistory.pop();
 
         if (cache) {
-            this._cacheHistory.push(this._previusRoute[this._previusRoute.length - 1]);
+            this.__cacheHistory.push(this.__previusRouteHistory[this.__previusRouteHistory.length - 1]);
         }
 
-        this._currentRoute.push(this._previusRoute[this._previusRoute.length - 1]);
+        this.__currentRouteHistory.push(this.__previusRouteHistory[this.__previusRouteHistory.length - 1]);
 
-        this._previusRoute.pop();
+        this.__previusRouteHistory.pop();
 
-        return Response.redirect(`${this._hostname}${this._currentRoute[0].uri}`, 200);
+        return Response.redirect(`${this.__url}${this.__currentRouteHistory[0].uri}`, 200);
     }
 
     public next(cache: boolean = false): TResponse {
-        if (this._nextsRoute.length === 0) return;
+        if (this.__nextsRouteHistory.length === 0) return;
 
-        this._previusRoute.push(this._currentRoute[0]);
+        this.__previusRouteHistory.push(this.__currentRouteHistory[0]);
 
-        this._currentRoute.pop();
+        this.__currentRouteHistory.pop();
 
         if (cache) {
-            this._cacheHistory.push(this._nextsRoute[0]);
+            this.__cacheHistory.push(this.__nextsRouteHistory[0]);
         }
 
-        this._currentRoute.push(this._nextsRoute[0]);
+        this.__currentRouteHistory.push(this.__nextsRouteHistory[0]);
 
-        this._nextsRoute.shift();
+        this.__nextsRouteHistory.shift();
 
-        return Response.redirect(`${this._hostname}${this._currentRoute[0].uri}`, 200);
+        return Response.redirect(`${this.__url}${this.__currentRouteHistory[0].uri}`, 200);
     }
 
     get cacheHistory(): IHistoryRoute[] {
-        return this._cacheHistory;
+        return this.__cacheHistory;
     }
 
     get history(): Array<IHistoryRoute[]> {
-        return [this._previusRoute, this._currentRoute, this._nextsRoute];
+        return [this.__previusRouteHistory, this.__currentRouteHistory, this.__nextsRouteHistory];
     }
 
     get currentRoute(): IHistoryRoute {
-        return this._currentRoute[0];
-    }
-
-    get mode(): "hash" | "history" {
-        return this._mode;
-    }
-
-    set mode(mode: "hash" | "history") {
-        this._mode = mode;
+        return this.__currentRouteHistory[0];
     }
 }

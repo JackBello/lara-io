@@ -6,8 +6,25 @@ import { Route } from '@lara-io/fecades';
 
 export default class RoutesProvider extends Provider {
     protected async boot() {
-        await Route.group(getBasePath("src/router/web/index.ts"));
+        const $router = this.app.service('router');
 
-        await Route.prefix("api").group(getBasePath("src/router/api/index.ts"));
+        const { files, strict } = this.app.config('router');
+        const { hostname } = this.app.config('server');
+
+        $router.setStrict(strict);
+
+        for(const file of files) {
+            const path = getBasePath(file.path);
+
+            if(file.subdomain && file.prefix) {
+                await Route.domain(`${file.subdomain}.${hostname}`).prefix(file.prefix).group(path);
+            } else if(file.subdomain && !file.prefix) {
+                await Route.domain(`${file.subdomain}.${hostname}`).group(path);
+            } else if(!file.subdomain && file.prefix) {
+                await Route.prefix(file.prefix).group(path);
+            } else {
+                await Route.group(path);
+            }
+        }
     }
 }

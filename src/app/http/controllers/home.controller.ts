@@ -3,8 +3,6 @@
 
 export default class HomeController {
     index(request: any) {
-        console.log(request.fullUrl);
-        
         return "Hello jack";
     }
 }

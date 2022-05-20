@@ -1,6 +1,6 @@
 import { Fecade } from './facade.ts';
 import { useFacade } from '../utils/index.ts';
-import { TRequestService } from '../@types/request.type.ts';
+import { THttpRequest } from '../@types/request.type.ts';
 
 class RequestFecade extends Fecade {
     constructor() {
@@ -8,4 +8,4 @@ class RequestFecade extends Fecade {
     }
 }
 
-export const Request: TRequestService = useFacade(RequestFecade);
+export const HttpRequest: THttpRequest = useFacade(RequestFecade);

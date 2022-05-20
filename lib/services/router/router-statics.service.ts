@@ -1,14 +1,16 @@
 // deno-lint-ignore-file no-inferrable-types
 import { Service } from '../services.ts';
 
+import Route from './route.ts';
+
 import { Path, Streams } from '../../dep.ts';
 
-const { join, extname } = Path;
+const { extname } = Path;
 const { readableStreamFromReader } = Streams;
 
 export class RouterStaticsService extends Service {
-    protected _statics: string = "";
-    protected _contentType: Record<string, string> = {
+    protected __pathStatics: string = "";
+    protected __contentType: Record<string, string> = {
         ".md": "text/markdown",
         ".html": "text/html",
         ".htm": "text/html",
@@ -132,37 +134,29 @@ export class RouterStaticsService extends Service {
         ".zip": "application/zip",
     };
 
-    public setStatics(path: string) {
-        this._statics = path;
+    public setPathStatics(path: string) {
+        this.__pathStatics = path;
     }
 
-    public async getFile(pathname: string) {
-        if (!this._statics) throw new Error("Static path not set");
+    public async getFile(pathname: string)  {
+        if (!this.__pathStatics) throw new Error("Static path not set");
 
         let file: Deno.FsFile, filePath: string, extension: string, mimeType: string;
 
         try {
-            filePath = `${this._statics}${pathname}`;
+            filePath = `${this.__pathStatics}${pathname}`;
             extension = extname(filePath);
 
             if (extension) {
                 file = await Deno.open(filePath, { read: true });
-                mimeType = this._contentType[extension];
-            } else {
-                filePath = join(this._statics, pathname, "index.html");
-                extension = extname(filePath);
-
-                file = await Deno.open(filePath, { read: true });
-                mimeType = this._contentType[extension];
+                mimeType = this.__contentType[extension];
             }
         } catch {
             throw new Error(`This url '${pathname}' no exist to router`);
         }
 
-        return {
-            uri: pathname,
-            pattern: pathname,
-            action: () => new Response(readableStreamFromReader(file), { headers: { "content-type": mimeType }, status: 200 })
-        }
+        const handle = () => new Response(readableStreamFromReader(file), { headers: { "content-type": mimeType }, status: 200 });
+
+        return new Route(pathname, undefined, handle);
     }
 }
