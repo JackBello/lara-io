@@ -1,4 +1,8 @@
 @code
+    const { createHash } = await import("https://deno.land/std@0.138.0/hash/mod.ts");
+
+    const myUUID = crypto.randomUUID();
+
     const name = "jeni";
     const age = 18;
     const languages = ["typescript", "javascript", "css"];
@@ -35,6 +39,18 @@
     </style>
 </head>
 <body>
+    {{ publicPath("index.html") }}
+
+    <br>
+
+    {{ createHash("md5") }}
+
+    <br>
+
+    {{ myUUID }}
+    
+    <br>
+
     {{ info.typescript }}
 
     <br>

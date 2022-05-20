@@ -6,7 +6,9 @@ import { RouterStaticsService } from './router-statics.service.ts';
 
 import { TemplateEngineService } from '../template/template-engine.service.ts';
 
-import { IRoute, ISettingRoute, IGroup } from '../../@types/interfaces/router.interface.ts';
+import Route from './route.ts';
+
+import { ISettingRoute, IGroup } from '../../@types/interfaces/router.interface.ts';
 import { TRequest, TResponse, TAllMethodHTTP, TMethodHTTP } from '../../@types/type/server.type.ts';
 import { getBasePath } from '../../utils/index.ts';
 
@@ -24,63 +26,57 @@ const { extname } = Path;
 //     }
 // }
 
+// let groupMiddleware: Array<any>;
+// if (this.__group.middleware) groupMiddleware = this.__group.middleware;
+// else groupMiddleware = [];
+
+// let groupController: string;
+// if (this.__group.controller) groupController = this.__group.controller;
+// else groupController = "";
+
 export class RouterService extends Service {
-    protected __routes: Array<IRoute> = [];
+    protected __routes: Array<Route> = [];
+
+    protected __strict?: boolean;
+
+    protected __currentRoute?: Route;
+    protected __paramsRoute?: any;
 
     protected __route: any = {
-        name: undefined,
+        middleware: undefined,
         pattern: undefined,
-        middleware: undefined,
-        controller: undefined,
+        name: undefined,
     }
+
     protected __group: IGroup = {
-        middleware: undefined,
-        controller: undefined,
-        domain: undefined,
-        prefix: undefined,
-        name: undefined
+        middleware: [],
+        controller: [],
+        domain: [],
+        prefix: [],
+        name: []
     }
 
     protected __template?: TemplateEngineService;
     protected __statics?: RouterStaticsService;
     protected __history?: RouterHistoryService;
+    
+    protected __hostname?: string;
     protected __request?: TRequest;
-    protected __pattern?: URLPattern;
+
     protected __pathController?: string;
     protected __pathMiddleware?: string;
-    protected __url?: string;
-
-    get routes() {
-        return this.__routes;
-    }
-
-    public setPathController(url: string) {
-        this.__pathController = `${url}/http/controllers/`;
-    }
-
-    public setPathMiddleware(url: string) {
-        this.__pathMiddleware = url;
-    }
 
     protected makePattern(uri: string, patterns: string | string[] = "") {
-        let request: Request, pattern: URLPattern;
+        let request: Request;
 
         if (!this.__request) throw new Error("the request undefined");
         else request = this.__request;
 
-        if (!this.__pattern) throw new Error("the pattern undefined");
-        else pattern = this.__pattern;
+        const pattern: URLPattern = new URLPattern(request.url);
 
-        const regExp = /(\:[a-zA-Z]+|\{[a-zA-Z]+\})(\?|)/g;
+        const regExp = /(\{[a-z]+(\?|)\})/g;
 
-        const params: Array<any> = uri.match(regExp)?.map(param => {
-            if (param.slice(0, 1) === ":") {
-                return (param.slice(param.length - 1) === "?") ? param.slice(1, -1) : param.slice(1)
-            }
-            if (param.slice(0, 1) === "{") {
-                return (param.slice(param.length - 1) === "?") ? param.slice(1, -2) : param.slice(1, -1)
-            }
-        }) || [];
+        const params: Array<string> = uri.match(regExp)?.map(param => param.replace(/\{|\}|\?/g, "")) || [];
 
         let urlRegExp = "";
 
@@ -90,11 +86,16 @@ export class RouterService extends Service {
             });
         } else {
             urlRegExp = `${uri}${patterns}`
+                .replace(/\{/g,":")
+                .replace(/\}/g,"")
+                .replace(`${pattern.hostname}`,"")
         }
 
         const match = new URLPattern(urlRegExp, `${pattern.protocol}://${pattern.hostname}`);
+        
+        const groups = match.exec(`${pattern.protocol}://${pattern.hostname}${pattern.pathname}`)?.pathname.groups;
 
-        const groups = match.exec(request.url)?.pathname.groups;
+        this.__paramsRoute = groups;
 
         const result = [];
 
@@ -106,52 +107,57 @@ export class RouterService extends Service {
     }
 
     protected async loadRoute() {
-        let pattern: URLPattern, request: Request;
+        if (!this.__request)
+            throw new Error("the request not defined");
 
-        if (!this.__pattern) throw new Error("the path undefined");
-        else pattern = this.__pattern;
+        if (!this.__strict)
+            throw new Error("the strict not defined");
 
-        if (!this.__request) throw new Error("the request undefined");
-        else request = this.__request;
+        const pattern: URLPattern = new URLPattern(this.__request.url);
 
-        const method: TAllMethodHTTP = request.method;
+        const method: TAllMethodHTTP = this.__request.method;
         const pathname: string = pattern.pathname;
+        const hostname: string = pattern.hostname;
+        const url = `${hostname}${pathname}`;
 
-        const route: IRoute = this.__routes.filter(route => {
-            let regExp: RegExp, uri: string;
+        const route: Route = this.__routes.filter(route => {
+            const uriPattern: string | string[] = route.regexp ? route.regexp : "[a-zA-Z0-9]+";
 
-            if (route.uri.search(/(\{[a-zA-Z0-9]+\}|\:[a-zA-Z0-9]+)(\?|)/g) !== -1) {
-                uri = route.uri
-                    .replace(/\/(\{[a-zA-Z0-9]+\}|\:[a-zA-Z0-9]+)\?/g, "(\/|)([a-zA-Z0-9]+|)")
-                    .replace(/\/(\{[a-zA-Z0-9]+\}|\:[a-zA-Z0-9]+)/g, "(\/|)[a-zA-Z0-9]+")
+            const domain = `${route.domain}`
+                .replace(/\{[a-z]+\}/g,"[a-zA-Z0-9]+");
+            
+            const uri = `${route.uri}`
+                .replace(/\/\{[a-z]+\?\}/g, `(\/${uriPattern}|)`)
+                .replace(/\/\{[a-z]+\}/g, `\/${uriPattern}`)
 
-                regExp = new RegExp(`^${uri}$`);
-            } else {
-                regExp = new RegExp(`^${route.uri}$`);
-            }
+            const regExp = new RegExp(`^${domain}${uri}$`);
 
-            if (pathname.match(regExp)) return route;
+            if (url.match(regExp)) return route;
         })[0];
 
-        if (!route) {
-            if (this.__statics) {
-                if(pathname === "/" || extname(pathname)) return await this.__statics.getFile(pathname);
-                else throw new Error(`This url '${pathname}' no exist to router`);
-            }
-            else throw new Error(`This url '${pathname}' no exist to router`);
-        }
+        if (!route && this.__statics && extname(pathname))
+                return await this.__statics.getFile(pathname);
+        else if (!route) throw new Error(`This url '${pathname}' no exist to router`);
 
-        if (method !== route.method) throw new Error(`This method '${method}' is not support in this route '${route.uri}'`)
+        if (route.redirect)
+            return route;
+
+        if (method !== route.method)
+            throw new Error(`This method '${method}' is not support in this route '${route.uri}'`)
 
         return route;
     }
 
-    protected async loadController(action: any, uri: string, pattern?: string | string[]) {
-        // let request;
-
+    protected async loadAction(action: any, uri: string, pattern?: string | string[]) {
         if (!this.__request) throw new Error("the request undefined");
 
-        const $request = this.app.use("request");
+        let $request;
+
+        try {
+            $request = this.app.use("http/request");
+        } catch {
+            $request = this.__request
+        }
         
         if (Array.isArray(action)) {
             const makeController = new action[0];
@@ -168,6 +174,11 @@ export class RouterService extends Service {
 
             if (pattern) params = this.makePattern(uri, pattern);
             else params = this.makePattern(uri);
+
+            $request.setRoute(this.__currentRoute);
+            $request.setParams(this.__paramsRoute);
+
+            await $request.serialize();
 
             if (params.length) return action(...params);
 
@@ -222,105 +233,134 @@ export class RouterService extends Service {
 
     protected handleResponse: (action: any) => TResponse = (action: any) => {
         if (action instanceof Response) return action;
-        else if (typeof action === "string") return new Response(action, { status: 200, headers: { "Content-Type": "text/plain" } });
+        else if (typeof action === "string" || typeof action === "number" || typeof action === "boolean") return new Response(`${action}`, { status: 200, headers: { "Content-Type": "text/plain" } });
+        else if (typeof action === "object") return new Response(JSON.stringify(action), { status: 200, headers: { "Content-Type": "application/json" } });
+        else return new Response(null, { status: 404 });
     }
 
-    public applyHandleError(handle: (error: unknown, request?: TRequest) => TResponse) {
-        this.handleError = handle;
+    protected async registerRoutes(routes: string): Promise<void> {
+        await import(routes);
     }
 
-    public applyHandleResponse(handle: (action: any) => TResponse) {
-        this.handleResponse = handle;
-    }
-
-    public registerRoute(setting: ISettingRoute, action: any) {
+    protected registerRoute(setting: ISettingRoute, action: any) {
         const {
             uri,
             method,
             middleware,
             name,
-            pattern
+            regexp,
+            redirect,
         } = setting;
 
-        if (!uri) throw new Error('uri must be given');
-        if (!method) throw new Error('method must be given');
-        if (!action) throw new Error('callback must be given');
+        if (!this.__hostname)
+            throw new Error("the hostname not defined");
 
-        if (typeof uri !== "string") throw new TypeError('typeof uri must be a string');
-        if (typeof method !== "string" || Array.isArray(method)) throw new TypeError('typeof uri must be a string');
+        if (uri === undefined || uri === null)
+            throw new Error('uri must be given');
+        
+        if (method === undefined || method === null)
+            throw new Error('method must be given');
+        
+        if (action === undefined || action === null)
+            throw new Error('callback must be given');
 
-        if (typeof action !== "function" && typeof action !== "string" && !Array.isArray(action)) throw new TypeError('typeof action must be a function, string or array');
+        if (typeof uri !== "string")
+            throw new TypeError('typeof uri must be a string');
 
-        // let groupMiddleware: Array<any>;
-        // if (this.__group.middleware) groupMiddleware = this.__group.middleware;
-        // else groupMiddleware = [];
+        if (typeof method !== "string" && !Array.isArray(method))
+            throw new TypeError('typeof method must be a string or array');
+        
+        if (typeof action !== "function" && typeof action !== "string" && !Array.isArray(action))
+            throw new TypeError('typeof action must be a function, string or array');
 
-        // let groupController: string;
-        // if (this.__group.controller) groupController = this.__group.controller;
-        // else groupController = "";
-
-        // let groupDomain: string;
-        // if (this.__group.domain) groupDomain = this.__group.domain;
-        // else groupDomain = "";
+        let groupDomain: string;
+        if (this.__group.domain[0]) groupDomain = this.__group.domain[0];
+        else groupDomain = this.__hostname;
 
         let gruopPrefix: string;
-        if (this.__group.prefix) gruopPrefix = this.__group.prefix.slice(0, 1) === "/" ? this.__group.prefix : `/${this.__group.prefix}`;
+        if (this.__group.prefix[0]) gruopPrefix = this.__group.prefix[0].startsWith("/") ? this.__group.prefix[0] : `/${this.__group.prefix[0]}`;
         else gruopPrefix = "";
 
         let groupName: string;
-        if (this.__group.name) groupName = this.__group.name;
+        if (this.__group.name[0]) groupName = this.__group.name[0];
         else groupName = "";
+        
+        if (gruopPrefix === "" && !uri.startsWith("/"))
+            throw new Error('uri must be start with "/"');
 
-        let route: IRoute;
-
-        if (uri.slice(0, 1) !== "/") throw new Error('uri must be start with "/"');
-
-        route = this.__routes.filter((route: IRoute) => route.name === `${groupName}${name}`)[0];
-
-        if (route) throw new Error(`the route name '${groupName}${route.name}' already exists`);
-
-        route = this.__routes.filter((route: IRoute) => route.uri === `${gruopPrefix}${uri}`)[0];
-
-        if (route) {
-            if (route.method === method) throw new Error(`the uri '${route.uri}' with method '${route.method}' already exists`);
-        }
-
-        let mode: string;
-        if (this.__history) mode = this.__history.mode === "hash" ? "#" : "";
-        else mode = "";
-
-        this.__routes.push({
-            uri: `${mode}${gruopPrefix}${uri}`,
-            method,
-            middleware,
-            name,
-            pattern,
-            action
+        this.__routes.forEach(route => {
+            if (route.name === `${groupName}${name}`) throw new Error(`the route with the name '${groupName}${name}' already exists`);
         });
+
+        this.__routes.filter(route => {
+            if (`${route.domain}${route.uri}` === `${groupDomain}${gruopPrefix}${uri}`) {
+                if (Array.isArray(method)) {
+                    //
+                } else {
+                    if (route.method === method) throw new Error(`the route with the uri '${groupDomain}${gruopPrefix}${uri}' and method '${method}' already exists`);
+                }
+            }
+        });
+
+        const route = new Route(`${gruopPrefix}${uri}`, method,action,middleware,groupDomain, name, redirect, regexp);
+
+        this.__routes.push(route);
+    }
+
+    protected execGroup(routes: any, type?: string): Promise<void> | void {
+        if (typeof routes === "string") {
+            return new Promise(resolve => {
+                this.registerRoutes(routes).then(() => {
+                    if (type) this.__group[type].shift();
+
+                    resolve();
+                });
+            })
+        } else {
+            routes();
+
+            if (type) this.__group[type].shift();
+        }
     }
 
     public get(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "GET", name: name, pattern: undefined }, action);
+        this.registerRoute({ uri, method: "GET", name: name, regexp: undefined }, action);
     }
 
     public post(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "POST", name: name, pattern: undefined }, action);
+        this.registerRoute({ uri, method: "POST", name: name, regexp: undefined }, action);
     }
 
     public put(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "PUT", name: name, pattern: undefined }, action);
+        this.registerRoute({ uri, method: "PUT", name: name, regexp: undefined }, action);
     }
 
     public delete(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "DELETE", name: name, pattern: undefined }, action);
+        this.registerRoute({ uri, method: "DELETE", name: name, regexp: undefined }, action);
     }
 
     public patch(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "PATCH", name: name, pattern: undefined }, action);
+        this.registerRoute({ uri, method: "PATCH", name: name, regexp: undefined }, action);
     }
 
     public match(methods: TMethodHTTP, uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: methods, name: name, pattern: undefined }, action);
+        this.registerRoute({ uri, method: methods, name: name, regexp: undefined }, action);
+    }
+
+    public any(uri: string, name: string, action: any) {
+        this.registerRoute({ uri: uri, method: ["DELETE", 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'], name: name, regexp: undefined }, action);
+    }
+    
+    public redirect(uri: string, destination: string, code = 302) {
+        this.registerRoute({ uri, method: ["DELETE", 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'], redirect: true }, () => {
+            return this.__history?.redirect(destination, code);
+        });
+    }
+
+    public permanentRedirect(uri: string, destination: string) {
+        this.registerRoute({ uri, method: ["DELETE", 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'], redirect: true }, () => {
+            return this.__history?.redirect(destination, 301);
+        });
     }
     
     public view(uri: string, view: string, data: any = {}) {
@@ -337,83 +377,114 @@ export class RouterService extends Service {
         });
     }
 
-    protected async registerRoutes(routes: string): Promise<void> {
-        await import(routes);
-    }
-
-    public group(routes: any): Promise<void> | void {
-        if (typeof routes === "string") {
-            return new Promise(resolve => {
-                this.registerRoutes(routes).then(() => {
-                    if (this.__group.middleware) this.__group.middleware = undefined;
-                    if (this.__group.controller) this.__group.controller = undefined;
-                    if (this.__group.domain) this.__group.domain = undefined;
-                    if (this.__group.prefix) this.__group.prefix = undefined;
-                    if (this.__group.name) this.__group.name = undefined;
-                    resolve();
-                });
-            })
-        } else {
-            routes();
-
-            if (this.__group.middleware) this.__group.middleware = undefined;
-            if (this.__group.controller) this.__group.controller = undefined;
-            if (this.__group.domain) this.__group.domain = undefined;
-            if (this.__group.prefix) this.__group.prefix = undefined;
-            if (this.__group.name) this.__group.name = undefined;
-        }
+    public async group(routes: any) {
+        await this.execGroup(routes);
     }
 
     public middleware(middleware: any) {
-        this.__group.middleware = middleware;
-        return this;
+        return {
+            group: (routes: any) => {
+                this.__group.middleware.unshift(middleware);
+                this.execGroup(routes, "middleware");
+            },
+        };
     }
 
     public controller(controller: any) {
-        this.__group.controller = controller;
-        return this;
+        return {
+            group: (routes: any) => {
+                this.__group.controller.unshift(controller);
+                this.execGroup(routes, "controller");
+            },
+        };
     }
 
     public prefix(prefix: string) {
-        this.__group.prefix = prefix;
-        return this;
+        return {
+            group: (routes: any) => {
+                this.__group.prefix.unshift(prefix);
+                this.execGroup(routes, "prefix");
+            },
+        };
     }
 
     public domain(domain: string) {
-        this.__group.domain = domain;
-        return this;
+        return {
+            group: (routes: any) => {
+                this.__group.domain.unshift(domain);
+                this.execGroup(routes, "domain");
+            },
+        };
     }
 
     public name(name: string) {
-        this.__group.name = name;
-        return this;
+        return {
+            group: (routes: any) => {
+                this.__group.name.unshift(name);
+                this.execGroup(routes, "name");
+            },
+        };
     }
 
-    public lookTemplate(template: TemplateEngineService) {
+    public applyHandleError(handle: (error: unknown, request?: TRequest) => TResponse) {
+        this.handleError = handle;
+    }
+
+    public applyHandleResponse(handle: (action: any) => TResponse) {
+        this.handleResponse = handle;
+    }
+
+    public useTemplate(template: TemplateEngineService) {
         this.__template = template;
     }
 
-    public lookStatics(statics: RouterStaticsService) {
+    public useFileStatic(statics: RouterStaticsService) {
         this.__statics = statics;
     }
 
-    public lookHistory(history: RouterHistoryService) {
+    public useHistory(history: RouterHistoryService) {
         this.__history = history;
     }
 
-    public lookRequest(request: TRequest) {
-        this.__url = request.url;
+    public setPathController(path: string) {
+        this.__pathController = `${path}/controllers/`;
+    }
+
+    public setPathMiddleware(path: string) {
+        this.__pathMiddleware = `${path}/middlewares/`;
+    }
+
+    public setRequest(request: TRequest) {
         this.__request = request;
-        this.__pattern = new URLPattern(request.url);
+    }
+
+    public sethostname(hostname: string) {
+        this.__hostname = hostname;
+    }
+
+    public setStrict(strict: boolean) {
+        this.__strict = strict;
+    }
+
+    get routes() {
+        return this.__routes;
+    }
+
+    get currentRoute() {
+        return this.__currentRoute;
     }
 
     public async lookPetitions() {
         try {
-            const route: IRoute | Promise<IRoute> = await this.loadRoute();
+            const route: Route | Promise<Route> = await this.loadRoute();
+            
+            this.__currentRoute = route;
+
+            if (route.redirect) return this.handleResponse(route.handler());
 
             if (this.__history) this.__history.handleHistory(route);
 
-            const action = await this.loadController(route.action, route.uri, route.pattern);
+            const action = await this.loadAction(route.handler, route.uri, route.regexp);
 
             return this.handleResponse(action);
         } catch (error) {

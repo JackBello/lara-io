@@ -37,9 +37,10 @@ export class Application {
     }
 
     public boot() {
-        const { providers, services, paths, configs }: IAppConfig = this.config("app");
+        const { providers, services, paths, configs, app }: IAppConfig = this.config("app");
 
         this.registerConfig("paths", () => (paths));
+        this.registerConfig("paths/app", () => (app));
 
         this.bootConfigs(configs);
         this.bootServices(services);
@@ -97,7 +98,7 @@ export class Application {
 
     public resolveDependencies(target: any, methodName: string) {
         const paramsFunction = Reflect.getMetadata('design:paramtypes', target.prototype, methodName);
-        
+
         if (!paramsFunction) return [];
 
         const paramsTypes = paramsFunction.map((type: any) => type.name)

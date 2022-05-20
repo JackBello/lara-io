@@ -2,7 +2,7 @@ import { Provider } from './provider.ts';
 
 import { TemplateEngineService } from '../services/template/template-engine.service.ts';
 
-import { EngineAtom } from '../services/template/engine-atom.service.ts';
+import { EngineAtom } from '../services/template/atom.engine.ts';
 export class TemplateProvider extends Provider{
     register() {
         this.app.registerService("template/engine", TemplateEngineService, {
@@ -11,7 +11,7 @@ export class TemplateProvider extends Provider{
             configService: {}
         });
 
-        this.app.registerService("template/engine/atom", EngineAtom, {
+        this.app.register("engine/atom", EngineAtom, {
             isSingleton: true,
             isCallback: true,
             configService: {}
@@ -20,14 +20,14 @@ export class TemplateProvider extends Provider{
 
     boot() {
         const $templateEngine = this.app.service("template/engine");
-        const $atomEngine = this.app.service("template/engine/atom");
+        const $engineAtom = this.app.use("engine/atom");
 
         const { resources } = this.app.config("paths");
 
-        $templateEngine.lookResources(resources);
+        $templateEngine.setPathViews(resources);
 
         $templateEngine.setEngine("atom");
 
-        $templateEngine.registerEngine("atom", $atomEngine);
+        $templateEngine.registerEngine("atom", $engineAtom);
     }
 }

@@ -2,16 +2,12 @@ import { Provider } from './provider.ts';
 
 import { IConnectionInfo } from '../@types/interfaces/server.interface.ts';
 
-import { ServerConfig } from '../configs/server.config.ts';
-
 import { ServerHandleService } from '../services/server/server-handle.service.ts';
 
 import { ServerService } from '../services/server/server.service.ts';
 
 export class ServerProvider extends Provider{
     register() {
-        this.app.registerConfig('server', ServerConfig);
-
         this.app.registerService('server/handle', ServerHandleService, {
             isSingleton: true,
             isCallback: true,
@@ -26,26 +22,26 @@ export class ServerProvider extends Provider{
     }
 
     async boot() {
+        const $httpRequest = this.app.use('http/request');
+
         const $server = this.app.service("server");
         const $serverHandle = this.app.service('server/handle');
-
-        const $request = this.app.use('request');
 
         const $router = this.app.service('router');
         const $routerHistory = this.app.service('router/history');
         const $routerStatics = this.app.service('router/statics');
 
+        $router.useHistory($routerHistory);
+
+        $router.useFileStatic($routerStatics);
+
         $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {
-            $request.lookRequest(request);
-            $request.lookConnectionInfo(connection);
+            $httpRequest.setRequest(request);
+            $httpRequest.setConnection(connection);
 
-            $routerHistory.lookRequest(request);
+            $routerHistory.setUrl(request);
 
-            $router.lookHistory($routerHistory);
-
-            $router.lookStatics($routerStatics);
-
-            $router.lookRequest(request);
+            $router.setRequest(request);
 
             return await $router.lookPetitions();
         });

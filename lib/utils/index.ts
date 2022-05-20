@@ -2,12 +2,7 @@
 import "https://deno.land/x/dotenv@v3.2.0/load.ts";
 import { Path } from '../dep.ts';
 
-const { fromFileUrl, dirname, resolve, toFileUrl } = Path;
-
-export function functionExist(func: any): boolean {
-    if (typeof func === "undefined") return false
-    return true;
-}
+const { dirname } = Path;
 
 export function useFacade(facade: any): any {
     return new facade();
@@ -35,6 +30,11 @@ export function envHas(key: string): boolean {
     else return false;
 }
 
-export function getBasePath(path: string): string {
-    return toFileUrl(`${resolve(dirname(fromFileUrl(import.meta.url)), "../../")}/${path}`).href;
+export function getBasePath(path: string, isImport = true): string {
+    if (isImport) return `file:///${Deno.cwd()}${path.startsWith("/") ? path : "/"+path}`.replace(/\\/g, "/");
+    return `${Deno.cwd()}${path.startsWith("/") ? path : "/"+path}`.replace(/\\/g, "/");
+}
+
+export function getPathName(path: string): string {
+    return dirname(`${Deno.cwd()}${path.startsWith("/") ? path : "/"+path}`.replace(/\\/g, "/"));
 }

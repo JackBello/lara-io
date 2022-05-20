@@ -1,10 +1,10 @@
 // deno-lint-ignore-file
-import { Service } from '../services.ts';
-
-export class EngineAtom extends Service {
+export class EngineAtom {
     private regExp = /({{(.*?)}}|\<\{(.*?)\}\>|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g;
     private code = "const result = [];\n";
     private js = false;
+    private matchHelpers = /(app|config|history|request|appPath|configPath|databasePath|ecosystemPath|publicPath|resourcePath|routerPath)/g;
+    private matchFecades = /(App|History|Request)/g;
 
     protected convert(line: string) {
         let vars: string
@@ -71,9 +71,9 @@ export class EngineAtom extends Service {
                 vars = line.split(/{{(.*?)}}/).filter(Boolean)[0].trim();
                 if (vars.startsWith("$")) {
                     this.code += 'result.push(' + vars.replace(/\$/g, "context.") + ');';
-                } else if (vars.match(/(app\(\)|history\(\)|request\(\))/g)){
+                } else if (vars.match(this.matchHelpers)){
                     this.code += 'result.push(' + "helpers." + vars + ');';
-                } else if (vars.match(/(App|History|Request)/g)) {
+                } else if (vars.match(this.matchFecades)) {
                     this.code += 'result.push(' + "fecades." + vars + ');';
                 } else {
                     this.code += 'result.push(' + vars + ');';
@@ -120,10 +120,12 @@ export class EngineAtom extends Service {
         this.code = this.code + 'return result.join("");';
     }
 
-    public compile(template: string) {
+    public compile(template: string): Promise<any> {
         this.parser(template);
 
-        const exec = new Function(`context`, `fecades`, `helpers`, this.code);
+        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+
+        const exec = new AsyncFunction(`context`, `fecades`, `helpers`, this.code);
 
         this.code = "const result = [];\n";
 
