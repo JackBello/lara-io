@@ -1,6 +1,6 @@
 import { Provider } from './provider.ts';
 
-import { IConnectionInfo } from '../@types/interfaces/server.interface.ts';
+import { IConnectionInfo } from '../@types/server.ts';
 
 import { ServerHandleService } from '../services/server/server-handle.service.ts';
 

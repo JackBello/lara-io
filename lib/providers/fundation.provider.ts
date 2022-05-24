@@ -1,12 +1,15 @@
 import { Provider } from './provider.ts';
 
-import { IConnectionInfo } from '../@types/interfaces/server.interface.ts';
+import { IConnectionInfo } from '../@types/server.ts';
+
+import { RouteContext } from '../fundation/router/route-context.ts';
 
 import { TemplateEngineService } from '../services/template/template-engine.service.ts';
 import { EngineAtom } from '../services/template/atom.engine.ts';
 
-import { HttpRequest } from '../fundation/http/request/request.ts';
+import { HttpRequest } from '../fundation/http/request/http-request.ts';
 
+import { RouterMiddlewareService } from '../services/router/router-middleware.service.ts';
 import { RouterStaticsService } from '../services/router/router-statics.service.ts'
 import { RouterHistoryService } from '../services/router/router-history.service.ts';
 import { RouterService } from '../services/router/router.service.ts';
@@ -30,6 +33,12 @@ export class FundationProvider extends Provider{
         });
 
         this.app.register("http/request", HttpRequest, {
+            isSingleton: true,
+            isCallback: true,
+            configService: {}
+        });
+
+        this.app.registerService("router/middleware", RouterMiddlewareService, {
             isSingleton: true,
             isCallback: true,
             configService: {}
@@ -64,15 +73,24 @@ export class FundationProvider extends Provider{
             isCallback: true,
             configService: {}
         });
+
+        this.app.register("route/context", RouteContext, {
+            isSingleton: true,
+            isCallback: true,
+            configService: {}
+        });
     }
 
     async boot() {
         const $httpRequest = this.app.use('http/request');
 
+        const $routeContext = this.app.use("route/context");
+
         const $server = this.app.service("server");
         const $serverHandle = this.app.service('server/handle');
 
         const $router = this.app.service('router');
+        const $routerMiddleware = this.app.service('router/middleware');
         const $routerHistory = this.app.service('router/history');
         const $routerStatics = this.app.service('router/statics');
 
@@ -105,7 +123,15 @@ export class FundationProvider extends Provider{
 
         $router.useFileStatic($routerStatics);
 
-        $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {            
+        $router.useMiddleware($routerMiddleware);
+
+        $routeContext.inject("request", $httpRequest);
+        $routeContext.inject("history", $routerHistory);
+        $routeContext.inject("view", $templateEngine.view);
+        $routeContext.inject("config", this.app.config);
+        $routeContext.inject("service", this.app.service);
+
+        $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {
             $httpRequest.setRequest(request);
             $httpRequest.setConnection(connection);
 

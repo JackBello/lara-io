@@ -1,5 +1,6 @@
 import { Fecade } from './facade.ts';
 import { useFacade } from '../utils/index.ts';
+import { THistory } from '../modules/types.ts';
 
 class HistoryFecade extends Fecade {
     constructor() {
@@ -7,4 +8,4 @@ class HistoryFecade extends Fecade {
     }
 }
 
-export const History = useFacade(HistoryFecade);
+export const History: THistory = useFacade(HistoryFecade);

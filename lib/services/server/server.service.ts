@@ -3,7 +3,7 @@ import { Service } from '../services.ts';
 
 import { Async } from '../../dep.ts';
 
-import { IConnectionInfo, ISettingServer } from '../../@types/interfaces/server.interface.ts';
+import { IConnectionInfo, ISettingServer } from '../../@types/server.ts';
 
 import { ServerHandleService } from './server-handle.service.ts';
 

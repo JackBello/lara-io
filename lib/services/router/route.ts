@@ -3,7 +3,7 @@ export default class Route {
     private __uri: string;
     private __method?: string | string[];
     private __handler?: any;
-    private __middlewares?: any[];
+    private __middlewares?: any;
     private __domain?: string;
     private __name?: string;
     private __redirect?: boolean;
@@ -13,7 +13,7 @@ export default class Route {
         uri: string,
         method?: string | string[],
         handler?: any,
-        middlewares?: any[],
+        middlewares?: any,
         domain?: string,
         name?: string,
         redirect?: boolean,

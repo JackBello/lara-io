@@ -3,8 +3,8 @@ import { Service } from '../services.ts';
 
 import Route from './route.ts'
 
-import { IHistoryRoute } from '../../@types/interfaces/router.interface.ts';
-import { TResponse } from '../../@types/type/server.type.ts';
+import { IHistoryRoute } from '../../@types/route.ts';
+import { TResponse } from '../../@types/server.ts';
 
 export class RouterHistoryService extends Service {
     protected __previusRouteHistory: IHistoryRoute[] = [];

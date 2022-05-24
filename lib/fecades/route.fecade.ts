@@ -1,6 +1,6 @@
 import { Fecade } from './facade.ts';
 import { useFacade } from '../utils/index.ts';
-import { TRoute } from '../@types/router.types.ts';
+import { TRouter } from '../modules/types.ts';
 
 class RouteFecade extends Fecade {
     constructor() {
@@ -8,4 +8,4 @@ class RouteFecade extends Fecade {
     }
 }
 
-export const Route: TRoute = useFacade(RouteFecade);
+export const Route: TRouter = useFacade(RouteFecade);

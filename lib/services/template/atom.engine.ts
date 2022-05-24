@@ -1,14 +1,43 @@
 // deno-lint-ignore-file
 export class EngineAtom {
-    private regExp = /({{(.*?)}}|\<\{(.*?)\}\>|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g;
+    private regExpCodeJS = /({{(.*?)}}|{{--(.*?)--}}|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g;
+    private regExpDirectives = /\@(.*?)\((.*?)\)/g;
     private code = "const result = [];\n";
-    private js = false;
-    private matchHelpers = /(app|config|history|request|appPath|configPath|databasePath|ecosystemPath|publicPath|resourcePath|routerPath)/g;
+    private isJS = false;
+    private isDoWhile = false;
+    private matchHelpers = /(app|service|config|history|request|appPath|configPath|databasePath|ecosystemPath|publicPath|resourcePath|routerPath)/g;
     private matchFecades = /(App|History|Request)/g;
+
+    public registerDirective(name: string, func: Function) {
+    }
+
+    public share(object: any) {
+        for (const key in object) {
+            if (object.hasOwnProperty(key)) {
+                this.code = this.code + `const ${key} = ${this.parseVariables(object[key])};\n`;
+            }
+        }
+    }
+
+    protected parseVariables(vars: any) {
+        if (typeof vars === "string") {
+            return `"${vars}"`;
+        } else if (typeof vars === "number") {
+            return vars;
+        } else if (typeof vars === "boolean") {
+            return vars;
+        } else if (typeof vars === "object") {
+            return JSON.stringify(vars);
+        } else if (typeof vars === "function") {
+            return `${vars}`;
+        } else {
+            return vars;
+        }
+    }
 
     protected convert(line: string) {
         let vars: string
-        if (line.match(this.regExp)) {
+        if (line.match(this.regExpCodeJS)) {
             if (line.match(/(\@break|\@continue)/g)) {
                 this.code += line.slice(1) + ";\n";
             }
@@ -17,12 +46,14 @@ export class EngineAtom {
                 if (line.match(/\@if\((.*?)\)/g)) {
                     this.code += line.slice(1)
                         .replace(/\$/g, "context.")
+                        .replace(/\#/g, "global.")
                         .replace(/\)/g, "){");
                 }
 
                 if (line.match(/\@elseif\((.*?)\)/g)) {
                     this.code += line.slice(1)
                         .replace(/\$/g, "context.")
+                        .replace(/\#/g, "global.")
                         .replace("elseif", "} else if")
                         .replace(/\)/g, "){");
                 }
@@ -40,6 +71,7 @@ export class EngineAtom {
                 if (line.match(/\@for\((.*?)\)/g)) {
                     this.code += line.slice(1)
                         .replace(/\$/g, "context.")
+                        .replace(/\#/g, "global.")
                         .replace(/\)/g, "){");
                 }
                 if (line.match(/\@endfor/g)) {
@@ -51,11 +83,13 @@ export class EngineAtom {
                 if (line.match(/\@do/g)) {
                     this.code += line.slice(1)
                         .replace(/\$/g, "context.")
+                        .replace(/\#/g, "global.")
                         .replace("do", "do {");
                 } 
                 if (line.match(/\@while\((.*?)\)/g)) {
                     this.code += line.slice(1)
                         .replace(/\$/g,  "context.")
+                        .replace(/\#/g, "global.")
                         .replace(/\)/g, "){");
                 }
                 if (line.match(/\@endwhile/g)) {
@@ -63,14 +97,16 @@ export class EngineAtom {
                 }
             }
 
-            if (line.match(/\<\{(.*?)\}\>/g)) {
-                this.code += '/*' + line.split(/\<\{|\}\>/).filter(Boolean)[0].trim() + "*/";
+            if (line.match(/{{--(.*?)--}}/g)) {
+                this.code += '/*' + line.split(/{{--(.*?)--}}/).filter(Boolean)[0].trim() + "*/";
             }
 
             else if (line.match(/{{(.*?)}}/g)) {
                 vars = line.split(/{{(.*?)}}/).filter(Boolean)[0].trim();
                 if (vars.startsWith("$")) {
                     this.code += 'result.push(' + vars.replace(/\$/g, "context.") + ');';
+                } else if (vars.startsWith("#")) {
+                    this.code += 'result.push(' + vars.replace(/\#/g, "global.") + ');';
                 } else if (vars.match(this.matchHelpers)){
                     this.code += 'result.push(' + "helpers." + vars + ');';
                 } else if (vars.match(this.matchFecades)) {
@@ -81,16 +117,17 @@ export class EngineAtom {
             }
         }
         else {
-            if (!this.js) {
-                if (line.match(/\@code/g)) this.js = true;
+            if (!this.isJS) {
+                if (line.match(/\@code/g)) this.isJS = true;
             }
 
-            if (this.js) {
+            if (this.isJS) {
                 this.code += line
                     .replace(/\$/g, "context.")
+                    .replace(/\#/g, "global.")
                     .replace(/\@code|\@endcode/g, "");
 
-                if (line.match(/\@endcode/g)) this.js = false;
+                if (line.match(/\@endcode/g)) this.isJS = false;
             } else { 
                 this.code += 'result.push(`' + line + '`);\n';
             }
@@ -98,7 +135,7 @@ export class EngineAtom {
     }
 
     protected parser(text: string) {
-        let regExp = /({{(.*?)}}|\<\{(.*?)\}\>|\@code|\@endcode|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g.exec(text);
+        let regExp = /({{(.*?)}}|{{--(.*?)--}}|\@code|\@endcode|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g.exec(text);
 
         let index;
 
@@ -112,7 +149,7 @@ export class EngineAtom {
 
             this.convert(regExp[0]);
             text = text.slice(regExp[0].length);
-            regExp = /({{(.*?)}}|\<\{(.*?)\}\>|\@code|\@endcode|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g.exec(text);
+            regExp = /({{(.*?)}}|{{--(.*?)--}}|\@code|\@endcode|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g.exec(text);
         }
 
         if (text) this.convert(text);
@@ -125,7 +162,7 @@ export class EngineAtom {
 
         const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
 
-        const exec = new AsyncFunction(`context`, `fecades`, `helpers`, this.code);
+        const exec = new AsyncFunction(`context`, `fecades`, `helpers`, `global`, `shared`, this.code);
 
         this.code = "const result = [];\n";
 
@@ -143,14 +180,11 @@ export class EngineAtom {
 @do
 
 @includes()
-
 @extends()
-
 @auth()
-
 @env()
-
 @csrf()
-
 @session()
+@route()
+@app.route("/<str:msg>")
 */

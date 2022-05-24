@@ -1,6 +1,4 @@
-// deno-lint-ignore-file no-explicit-any
-import { TAllMethodHTTP } from './type/server.type.ts';
-import { IRoute } from './interfaces/router.interface.ts';
+import { TAllMethodHTTP } from './server.ts';
 
 export type TRequestServer = {
     https: boolean,
@@ -54,24 +52,4 @@ export type TUploadedFile = {
     move(path: string, name?: string): void,
     save(path: string): void,
     saveAs(path: string, name: string): void,
-}
-
-export type THttpResponse = {};
-
-export type THttpRequest = {
-    headers: Record<string, string>;
-    query: Record<string, string>;
-    params: Record<string, string>;
-    route: IRoute;
-    body: any;
-    files: Record<string, TUploadedFile>;
-    cookies?: any[];
-    server?: TRequestServer;
-    session?: any;
-    user?: any;
-    method: TAllMethodHTTP;
-    ip: string;
-    baseUrl: string;
-    baseUri: string;
-    fullUrl: string;
 }

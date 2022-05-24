@@ -1,6 +1,6 @@
-import { IRouterConfig } from '../../lib/@types/interfaces/router.interface.ts';
+import { RouterConfig } from '@lara-io/types';
 
-export default (): IRouterConfig => ({
+export default (): RouterConfig => ({
     strict: true,
 
     files: [
@@ -12,4 +12,4 @@ export default (): IRouterConfig => ({
             subdomain: "api"
         }
     ]
-})
+});
