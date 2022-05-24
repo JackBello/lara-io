@@ -1,10 +1,10 @@
 import { Fecade } from './facade.ts';
 import { useFacade } from '../utils/index.ts';
-import { THttpRequest } from '../@types/request.type.ts';
+import { THttpRequest } from '../modules/types.ts';
 
 class RequestFecade extends Fecade {
     constructor() {
-        super("@/request");
+        super("@/http/request");
     }
 }
 

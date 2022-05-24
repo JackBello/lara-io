@@ -1,6 +1,6 @@
 import { Provider } from './provider.ts';
 
-import { HttpRequest } from '../fundation/http/request/request.ts';
+import { HttpRequest } from '../fundation/http/request/http-request.ts';
 
 export class RouterProvider extends Provider{
     register() {

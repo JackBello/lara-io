@@ -1,4 +1,4 @@
-export default class StorageFile {
+export default class HttpFile {
     private __content: Uint8Array | undefined;
     private __originalName: string;
     private __filename: string | undefined;
@@ -47,36 +47,36 @@ export default class StorageFile {
         return this.__type;
     }
 
-    public getContent() {
+    public getContent(): Uint8Array {
         if (this.__content) return this.__content;
         return Deno.readFileSync(`${this.tmp}${this.fileName}`);
     }
 
-    get originalName() {
+    get originalName(): string {
         return this.getOriginalName();
     }
 
-    get fileName() {
+    get fileName(): string | undefined {
         return this.getFileName();
     }
 
-    get size() {
+    get size(): number {
         return this.getSize();
     }
 
-    get type() {
+    get type(): string {
         return this.getType();
     }
 
-    get tmp() {
+    get tmp(): string | undefined {
         return this.getTmp();
     }
 
-    get extension() {
+    get extension(): string {
         return this.getExtension();
     }
 
-    get mimeType() {
+    get mimeType(): string {
         return this.getMimeType();
     }
 }

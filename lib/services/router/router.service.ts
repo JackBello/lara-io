@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any no-this-alias
 import { Service } from '../services.ts';
 
+import { RouterMiddlewareService } from './router-middleware.service.ts';
 import { RouterHistoryService } from './router-history.service.ts';
 import { RouterStaticsService } from './router-statics.service.ts';
 
@@ -8,31 +9,13 @@ import { TemplateEngineService } from '../template/template-engine.service.ts';
 
 import Route from './route.ts';
 
-import { ISettingRoute, IGroup } from '../../@types/interfaces/router.interface.ts';
-import { TRequest, TResponse, TAllMethodHTTP, TMethodHTTP } from '../../@types/type/server.type.ts';
+import { ISettingRoute, IGroup } from '../../@types/route.ts';
+import { TRequest, TResponse, TAllMethodHTTP, TMethodHTTP } from '../../@types/server.ts';
 import { getBasePath } from '../../utils/index.ts';
 
 import { Path } from '../../dep.ts';
 
 const { extname } = Path;
-
-// if (route.middleware) {
-//     const middleware = this.app.resolveDependencies(route.middleware);
-
-//     if (middleware.length > 0) {
-//         return middleware[0].apply(middleware[0], [this.__request, action]);
-//     } else {
-//         return route.middleware.apply(route.middleware, [this.__request, action]);
-//     }
-// }
-
-// let groupMiddleware: Array<any>;
-// if (this.__group.middleware) groupMiddleware = this.__group.middleware;
-// else groupMiddleware = [];
-
-// let groupController: string;
-// if (this.__group.controller) groupController = this.__group.controller;
-// else groupController = "";
 
 export class RouterService extends Service {
     protected __routes: Array<Route> = [];
@@ -41,6 +24,8 @@ export class RouterService extends Service {
 
     protected __currentRoute?: Route;
     protected __paramsRoute?: any;
+
+    protected _context_: any;
 
     protected __route: any = {
         middleware: undefined,
@@ -51,12 +36,15 @@ export class RouterService extends Service {
     protected __group: IGroup = {
         middleware: [],
         controller: [],
+        namespace: [],
         domain: [],
         prefix: [],
         name: []
     }
 
     protected __template?: TemplateEngineService;
+    
+    protected __middleware?: RouterMiddlewareService;
     protected __statics?: RouterStaticsService;
     protected __history?: RouterHistoryService;
     
@@ -150,16 +138,33 @@ export class RouterService extends Service {
 
     protected async loadAction(action: any, uri: string, pattern?: string | string[]) {
         if (!this.__request) throw new Error("the request undefined");
+        if (!this.__middleware) throw new Error("the middleware undefined");
 
-        let $request;
+        const $routeContext = this.app.use("route/context");
+        const $httpRequest = this.app.use("http/request");
 
-        try {
-            $request = this.app.use("http/request");
-        } catch {
-            $request = this.__request
-        }
-        
-        if (Array.isArray(action)) {
+        if(typeof action === "function") {
+            let params: Array<any> = [];
+
+            if (pattern) params = this.makePattern(uri, pattern);
+            else params = this.makePattern(uri);
+
+            $httpRequest.setRoute(this.__currentRoute);
+            $httpRequest.setParams(this.__paramsRoute);
+    
+            await $httpRequest.serialize();
+
+            if (params.length) this.__middleware.setAction(await action($routeContext.getContext(), ...params));
+            else this.__middleware.setAction(await action($routeContext.getContext()));
+
+            this.__middleware.setContext($routeContext.getContext());
+
+            await this.__middleware.run();
+
+            return this.__middleware.result;
+        } 
+
+        else if (Array.isArray(action)) {
             const makeController = new action[0];
 
             const dependencies: any[] = this.app.resolveDependencies(action[0], action[1]);            
@@ -167,23 +172,11 @@ export class RouterService extends Service {
             if (dependencies.length > 0) {
                 return makeController[action[1]].call(makeController, ...dependencies);
             } else {
-                return makeController[action[1]].call(makeController, $request);
+                return makeController[action[1]].call(makeController);
             }
-        } else if(typeof action === "function") {
-            let params: Array<any> = [];
-
-            if (pattern) params = this.makePattern(uri, pattern);
-            else params = this.makePattern(uri);
-
-            $request.setRoute(this.__currentRoute);
-            $request.setParams(this.__paramsRoute);
-
-            await $request.serialize();
-
-            if (params.length) return action(...params);
-
-            return action($request);
-        } else if(typeof action === "string"){
+        }
+        
+        else if(typeof action === "string"){
             const [name, method]: string[] = action.split("@");
 
             if (name.indexOf(".") !== -1) {
@@ -198,7 +191,7 @@ export class RouterService extends Service {
                 if (dependencies.length > 0) {
                     return makeController[method].call(makeController, ...dependencies);
                 } else {
-                    return makeController[method].call(makeController, $request);
+                    return makeController[method].call(makeController);
                 }
             }
 
@@ -218,9 +211,9 @@ export class RouterService extends Service {
                 const dependencies: any[] = this.app.resolveDependencies(controller.default, method);
 
                 if (dependencies.length > 0) {
-                    return makeController[method].apply(makeController, ...dependencies);
+                    return makeController[method].call(makeController, ...dependencies);
                 } else {
-                    return makeController[method].apply(makeController, $request);
+                    return makeController[method].call(makeController);
                 }
             }
         }
@@ -323,32 +316,39 @@ export class RouterService extends Service {
         }
     }
 
-    public get(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "GET", name: name, regexp: undefined }, action);
+    public graphql(schema: any, rootValue?: any, context?: any, info?: any) {
+        schema;
+        rootValue;
+        context;
+        info;
     }
 
-    public post(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "POST", name: name, regexp: undefined }, action);
+    public get(uri: string, name: string, action: any, middleware?: any) {
+        this.registerRoute({ uri, method: "GET", name: name, regexp: undefined , middleware}, action);
     }
 
-    public put(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "PUT", name: name, regexp: undefined }, action);
+    public post(uri: string, name: string, action: any, middleware?: any) {
+        this.registerRoute({ uri, method: "POST", name: name, regexp: undefined , middleware}, action);
     }
 
-    public delete(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "DELETE", name: name, regexp: undefined }, action);
+    public put(uri: string, name: string, action: any, middleware?: any) {
+        this.registerRoute({ uri, method: "PUT", name: name, regexp: undefined , middleware}, action);
     }
 
-    public patch(uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: "PATCH", name: name, regexp: undefined }, action);
+    public delete(uri: string, name: string, action: any, middleware?: any) {
+        this.registerRoute({ uri, method: "DELETE", name: name, regexp: undefined , middleware}, action);
     }
 
-    public match(methods: TMethodHTTP, uri: string, name: string, action: any) {
-        this.registerRoute({ uri, method: methods, name: name, regexp: undefined }, action);
+    public patch(uri: string, name: string, action: any, middleware?: any) {
+        this.registerRoute({ uri, method: "PATCH", name: name, regexp: undefined , middleware}, action);
     }
 
-    public any(uri: string, name: string, action: any) {
-        this.registerRoute({ uri: uri, method: ["DELETE", 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'], name: name, regexp: undefined }, action);
+    public match(methods: TMethodHTTP, uri: string, name: string, action: any, middleware?: any) {
+        this.registerRoute({ uri, method: methods, name: name, regexp: undefined , middleware}, action);
+    }
+
+    public any(uri: string, name: string, action: any, middleware?: any) {
+        this.registerRoute({ uri: uri, method: ["DELETE", 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'], name: name, regexp: undefined , middleware}, action);
     }
     
     public redirect(uri: string, destination: string, code = 302) {
@@ -379,6 +379,10 @@ export class RouterService extends Service {
 
     public async group(routes: any) {
         await this.execGroup(routes);
+    }
+
+    public namespace(namespace: any) {
+        namespace;
     }
 
     public middleware(middleware: any) {
@@ -438,6 +442,10 @@ export class RouterService extends Service {
         this.__template = template;
     }
 
+    public useMiddleware(middleware: RouterMiddlewareService) {
+        this.__middleware = middleware;
+    }
+
     public useFileStatic(statics: RouterStaticsService) {
         this.__statics = statics;
     }
@@ -483,6 +491,10 @@ export class RouterService extends Service {
             if (route.redirect) return this.handleResponse(route.handler());
 
             if (this.__history) this.__history.handleHistory(route);
+
+            if (this.__middleware) {
+                if (route.middlewares) this.__middleware.add(route.middlewares);
+            }
 
             const action = await this.loadAction(route.handler, route.uri, route.regexp);
 
