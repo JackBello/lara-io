@@ -1,15 +1,16 @@
-// deno-lint-ignore-file no-explicit-any
-import { TSettingRegisterSevice } from '../@types/type/application.type.ts';
+// deno-lint-ignore-file no-explicit-any no-inferrable-types
+import { TSettingRegisterSevice } from '../@types/index.ts';
 
-import { IAppConfig, IProviders, IServices, IConfigs } from '../@types/interfaces/configs.interface.ts';
+import { IProviders, IServices, IConfigs } from '../@types/application.ts';
 
 import { Container } from '../container/container.ts';
 import { Fecade } from '../fecades/facade.ts';
 
 import { Reflect } from '../dep.ts';
-
 export class Application {
-    protected instance: Application = this;
+    protected static _instance: Application;
+
+    protected version: string = "0.0.1";
 
     protected _name_: string;
     protected _customs: string[];
@@ -29,15 +30,28 @@ export class Application {
         this.init();
     }
 
+    public static get instance() {
+        if(this._instance === null) {
+            this._instance = new this(this.name);
+        }
+
+        return this._instance;
+    }
+
+    public static set instance(instance: Application) {
+        this._instance = instance;
+    }
+
     protected init() {
         this.__container.singletonInstance("@app", this);
 
         Fecade.container = this.__container;
         Container.instance = this.__container;
+        Application.instance = this;
     }
 
     public boot() {
-        const { providers, services, paths, configs, app }: IAppConfig = this.config("app");
+        const { providers, services, paths, configs, app } = this.config("app");
 
         this.registerConfig("paths", () => (paths));
         this.registerConfig("paths/app", () => (app));
@@ -84,6 +98,10 @@ export class Application {
         return this.__container.make(`@config/${name}`, {});
     }
 
+    public provider(name: string) {
+        return this.__container.make(`@provider/${name}`, {});
+    }
+
     public executeRegisterProviders() {
         this._providers.forEach(name => {
             this.__container.make(name, {}).register();
@@ -115,6 +133,7 @@ export class Application {
         };
         
         let service;
+
         for(const paramType of paramsTypes) {
             if(!validateTypes[paramType]) {
                 if (paramType.indexOf("Service") !== -1) {
@@ -219,5 +238,25 @@ export class Application {
         configs.forEach((name: string, instance: any) => {
             this.registerConfig(name, instance);
         });
+    }
+
+    public make(name: string, parameters: any) {
+        return this.__container.make(name, parameters);
+    }
+
+    public bind(name: string, callback: any) {
+        this.__container.bind(name, callback);
+    }
+
+    public bindInstance(name: string, instance: any) {
+        this.__container.bindInstance(name, instance);
+    }
+
+    public singleton(name: string, callback: any) {
+        this.__container.singleton(name, callback);
+    }
+
+    public singletonInstance(name: string, instance: any) {
+        this.__container.singletonInstance(name, instance);
     }
 }

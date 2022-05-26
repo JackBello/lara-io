@@ -1,4 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
+
 export interface IProviders {
     name: string;
     instance: any;
@@ -18,12 +19,6 @@ export interface IAlias {
 export interface IConfigs {
     name: string;
     instance: any;
-}
-
-export interface ITypeAliases {
-    fecades: IAlias[];
-    services: IAlias[];
-    helpers: IAlias[];
 }
 
 export interface IAppPaths {
@@ -52,15 +47,4 @@ export interface IPath {
     ecosystems?: string;
     router?: string;
     [key: string]: string | undefined;
-}
-
-export interface IAppConfig {
-    name: any;
-    app: IAppPaths;
-    paths: IPath;
-    providers: IProviders[];
-    services: IServices[];
-    aliases: ITypeAliases;
-    configs: Array<any>;
-    isDebug: boolean;
 }

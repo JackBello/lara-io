@@ -1,10 +1,11 @@
 import { Fecade } from './facade.ts';
 import { useFacade } from '../utils/index.ts';
+import { TTemplate } from '../modules/types.ts';
 
-class ViewFecade extends Fecade {
+class TemplateFecade extends Fecade {
     constructor() {
         super("template/engine");
     }
 }
 
-export const View = useFacade(ViewFecade);
+export const Template: TTemplate = useFacade(TemplateFecade);

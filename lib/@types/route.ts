@@ -1,29 +1,27 @@
 // deno-lint-ignore-file no-explicit-any
-import { TMethodHTTP } from '../type/server.type.ts';
+import { TMethodHTTP } from './server.ts';
+import { TRouteContext } from '../modules/types.ts';
 
-interface IRouterFile {
+// interfaces
+
+export interface IRouterFile {
     prefix?: string;
     subdomain?: string;
     path: string;
 }
 
-interface IGroupConfig extends IGroup {
+export interface IGroupConfig extends IGroup {
     routes: Array<IRouteConfig>;
 }
 
-interface IRouteConfig extends IRoute {
+export interface IRouteConfig extends IRoute {
     group?: IGroupConfig
-}
-
-export interface IRouterConfig {
-    strict: boolean;
-    files: Array<IRouterFile>;
-    routes?: Array<IRouteConfig>;
 }
 
 export interface IGroup {
     [key: string]: any[];
 }
+
 export interface IRoute {
     uri: string,
     name?: string,
@@ -56,3 +54,11 @@ export interface IHistory {
     currentRoute: Array<IHistoryRoute>;
     nextRoutes: Array<IHistoryRoute>;
 }
+
+export type TCallbackRoute = (context: TRouteContext, ...params: any) => any;
+
+export type TCallbackMiddleware = (context: TRouteContext, next: () => any) => any;
+
+export type TAction = string | any[] | TCallbackRoute;
+
+export type TMiddleware = string | any[] | TCallbackMiddleware | TCallbackMiddleware[];

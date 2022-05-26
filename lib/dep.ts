@@ -6,6 +6,15 @@ import { readerFromStreamReader, writerFromStreamWriter, readableStreamFromReade
 import { parse as parseXML, stringify } from "https://deno.land/x/xml@2.0.4/mod.ts";
 import { move, moveSync, ensureSymlinkSync, ensureDirSync } from "https://deno.land/std@0.140.0/fs/mod.ts";
 import { MultipartReader, MultipartWriter, isFormFile } from 'https://deno.land/std@0.140.0/mime/mod.ts';
+import { parse as parseYAML, stringify as stringifyYAML  } from 'https://deno.land/std@0.140.0/encoding/yaml.ts';
+import { toHtml } from "https://deno.land/x/md6@v0.7/mod.ts";
+import { getCookies, setCookie, deleteCookie } from "https://deno.land/std@0.140.0/http/cookie.ts";
+
+export const Cookies = {
+    getCookies,
+    setCookie,
+    deleteCookie
+}
 
 export const Mime = {
     MultipartReader,
@@ -22,6 +31,18 @@ export const Fs = {
 
 export const conversionXMLtoJSON = {
     parse: parseXML,
+}
+export const Marckdown = {
+    toHtml
+}
+
+export const conversionYAML = {
+    parseYAML,
+    stringifyYAML
+}
+
+export const conversionXML = {
+    parse,
     stringify
 }
 

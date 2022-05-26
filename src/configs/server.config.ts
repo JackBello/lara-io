@@ -1,8 +1,7 @@
-export default () => ({
+import { ServerConfig } from '@lara-io/types';
+
+export default (): ServerConfig => ({
     hostname: "localhost",
     port: 80,
-    certFile: undefined,
-    keyFile: undefined,
     transport: "tcp",
-    protocols: undefined,
-})
+});

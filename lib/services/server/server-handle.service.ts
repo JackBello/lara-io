@@ -1,4 +1,4 @@
-import { THandleResponse, THandleRequest, THandleError, TResponse } from '../../@types/type/server.type.ts'
+import { THandleResponse, THandleRequest, THandleError, TResponse } from '../../@types/server.ts'
 
 import { Service } from '../services.ts'
 

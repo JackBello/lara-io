@@ -1,30 +1,46 @@
-import { Container } from '../container/container.ts';
+import { Application } from '../fundation/application.ts';
 
 import { RouterHistoryService } from '../services/router/router-history.service.ts';
 import { RouterService } from '../services/router/router.service.ts';
 
-import { THttpRequest } from '../@types/request.type.ts';
+import { THttpRequest } from '../modules/types.ts';
 
 import { StorageService } from '../services/storage/storage.service.ts';
 
 export function app() {
-    return Container.instance;
+    return Application.instance;
+}
+
+export function use(name: string) {
+    return app().use(name);
 }
 
 export function config(name: string) {
-    return app().make(`@config/${name}`, {});
+    return app().config(name);
 }
 
-export function view() {
-    return app().make("@service/template/engine", {});
+export function service(name: string) {
+    return app().service(name);
+}
+
+export function provider(name: string) {
+    return app().provider(name);
 }
 
 export function request(): THttpRequest {
-    return app().make('@/http/request', {});
+    return use("http/request")
+}
+
+export function template() {
+    return service("template/engine");
+}
+
+export async function view(view: string, data = {}) {
+    return await service("template/engine").view(view, data);
 }
 
 export function router(): RouterService {
-    return app().make('@service/router', {});
+    return service("router");
 }
 
 export function history(): RouterHistoryService {

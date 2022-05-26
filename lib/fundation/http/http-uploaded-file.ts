@@ -1,9 +1,9 @@
-import StorageFile from '../storage/storage-file.ts';
+import HttpFile from './http-file.ts';
 import { Fs } from '../../dep.ts';
 
 const { moveSync } = Fs;
 
-export class UploadedFile extends StorageFile{
+export class HttpUploadedFile extends HttpFile{
     public constructor(content: Uint8Array | undefined, originalName: string, size: number, type: string, tmp: string | undefined, filename: string | undefined) {
         super(content, originalName, size, type, tmp, filename);
     }

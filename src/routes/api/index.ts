@@ -2,8 +2,6 @@ import { Route } from '@lara-io/fecades';
 
 import { publicPath } from '@lara-io/helpers';
 
-import { THttpRequest } from '../../../lib/@types/request.type.ts'
-
 Route.get("/", "", () => {
     const data = {
         name: "Deno",
@@ -20,7 +18,7 @@ Route.get("/", "", () => {
     })
 });
 
-Route.post("/json", "papa", (request: THttpRequest) => {
+Route.post("/upload", "upload", ({ request }) => {
     const { video } = request.files;
     
     const path = publicPath("videos/");
@@ -37,4 +35,8 @@ Route.post("/json", "papa", (request: THttpRequest) => {
     // video.saveAs(path, "test."+video.extension);
 
     return `success`;
+});
+
+Route.post("/json", " body.json", ({ request }) => {
+    return request.cookies;
 });

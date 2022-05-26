@@ -1,20 +1,40 @@
 import { Route } from '@lara-io/fecades';
 
-import { TRequestService } from '../../../lib/@types/request.type.ts';
-
 import HomeController from '../../app/http/controllers/home.controller.ts';
 
 import { Streams } from '../../../lib/dep.ts';
 
-import { publicPath } from '@lara-io/helpers';
+import { publicPath, view, template } from '@lara-io/helpers';
 
 const { readableStreamFromReader } = Streams;
 
 Route.get("/", "index", [HomeController, "index"]);
 
-await Route.view("/atom", "test", { data: "Welcome", name: "Deno", history: "papa" });
+Route.get("/atom", "test", () => {
+    template().share({
+        minecraft: "https://minecraft.net/en-us/download/server/",
+    });
+
+    return view("test", { data: "Welcome", name: "Deno", history: "papa" });
+}, ({ request }, next) => {
+    if (!request.user) {
+        return view("404");
+    } else {
+        next();
+    }
+});
 
 await Route.view("/atom2", "home.ts");
+
+Route.get("/middleware", "test.middleware", () => {
+    return "<h1>Hello</h1>";
+}, ({ request }, next) => {
+    if (request.user) {
+        return view("404");
+    } else {
+        next();
+    }
+});
 
 Route.get("/contact", "contact", () => {
     return "contact";
@@ -46,7 +66,7 @@ Route.prefix("user").group(() => {
         return "user";
     });
 
-    Route.get("/{id?}/{type?}", "user.id", (id: number, type: string) => {
+    Route.get("/{id?}/{type?}", "user.id", (context, id: number, type: string) => {
         if (type) {
             return `user ${id} ${type}`;
         }
@@ -58,8 +78,8 @@ Route.prefix("user").group(() => {
     });
 });
 
-Route.get("/cars", "cars", (request: TRequestService) => {
-    console.log(request);
+Route.get("/cars", "cars", (context) => {
+    console.log(context);
 
     return "cars";
 });

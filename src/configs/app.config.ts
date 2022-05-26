@@ -1,10 +1,10 @@
 import { FundationProvider } from '@lara-io/providers';
-
-import { IAppConfig } from '../../lib/@types/interfaces/configs.interface.ts';
+import { ApplicationConfig } from '@lara-io/types';
 
 import RoutesProvider from '../app/providers/routes.provider.ts';
+import TemplatesProvider from '../app/providers/templates.provider.ts'
 
-export default (): IAppConfig => ({
+export default (): ApplicationConfig => ({
     name: "compureviews",
 
     app: {
@@ -33,36 +33,12 @@ export default (): IAppConfig => ({
         {
             name: "routes",
             instance: RoutesProvider
+        },
+        {
+            name: "templates",
+            instance: TemplatesProvider
         }
     ],
-
-    aliases: {
-        services: [
-            {
-                alias: "Router",
-                service: "router"
-            }
-        ],
-        fecades: [
-            {
-                alias: "Route",
-            },
-            {
-                alias: "App",
-            }
-        ],
-        helpers: [
-            {
-                alias: "app()"
-            },
-            {
-                alias: "router()",
-            },
-            {
-                alias: "history()",
-            }
-        ]
-    },
 
     configs: [],
 

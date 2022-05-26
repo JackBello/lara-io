@@ -1,6 +1,7 @@
 {
     "imports": {
         "@lara-id": "./lib/modules/types.ts",
+        "@lara-io/types": "./lib/modules/types.ts",
         "@lara-io/core": "./lib/modules/core.ts",
         "@lara-io/config": "./lib/modules/config.ts",
         "@lara-io/utils": "./lib/modules/utils.ts",
