@@ -1,11 +1,16 @@
 import { IDisk, IInfoFile } from "./interfaces/storage.interface.ts";
+import { TUploadedFile } from './request.type.ts';
+
 export type TStorage = {
-  storage_path: (path?: string) => string;
-  public_path: (path?: string) => string;
+  // storage_path: (path?: string) => string;
+  // public_path: (path?: string) => string;
   exists: (path: string) => boolean;
   missing: (path: string) => boolean;
   get: (path: string) => string;
-  put: (path: string, contents: string) => boolean;
+  put: (path: string, contents: Uint8Array) => boolean;
+  putFile: (path: string, contents: TUploadedFile) => string
+  putFileAs: (path: string, contents: TUploadedFile, name: string) => string
+  delete: (path: string | Array<string>) => boolean
   path: (path: string) => string;
   url: (path: string) => string;
   info: (path: string) => IInfoFile;

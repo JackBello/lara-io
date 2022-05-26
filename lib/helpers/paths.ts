@@ -44,3 +44,9 @@ export function ecosystemPath(path: string, relative = false): string {
     if (relative) return `${paths.ecosystems}${path.startsWith("/") ? path : "/"+path}`;
     return getBasePath(`${paths.ecosystems}${path.startsWith("/") ? path : "/"+path}`, false);
 }
+
+export function storagePath(path: string, relative = false): string {
+    paths =  config("paths");
+    if (relative) return `${paths.storage}${path.startsWith("/") ? path : "/"+path}`;
+    return getBasePath(`${paths.storage}${path.startsWith("/") ? path : "/"+path}`, false);
+}

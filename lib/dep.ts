@@ -4,7 +4,7 @@ import { delay } from "https://deno.land/std@0.129.0/async/mod.ts";
 import {  fromFileUrl, dirname, resolve, toFileUrl, join, extname, parse, basename } from "https://deno.land/std@0.110.0/path/mod.ts";
 import { readerFromStreamReader, writerFromStreamWriter, readableStreamFromReader, writableStreamFromWriter, copy } from "https://deno.land/std@0.134.0/streams/mod.ts";
 import { parse as parseXML, stringify } from "https://deno.land/x/xml@2.0.4/mod.ts";
-import { move, moveSync, ensureSymlinkSync } from "https://deno.land/std@0.140.0/fs/mod.ts";
+import { move, moveSync, ensureSymlinkSync, ensureDirSync } from "https://deno.land/std@0.140.0/fs/mod.ts";
 import { MultipartReader, MultipartWriter, isFormFile } from 'https://deno.land/std@0.140.0/mime/mod.ts';
 
 export const Mime = {
@@ -16,7 +16,8 @@ export const Mime = {
 export const Fs = {
     move,
     moveSync,
-    ensureSymlinkSync
+    ensureSymlinkSync,
+    ensureDirSync
 }
 
 export const conversionXMLtoJSON = {

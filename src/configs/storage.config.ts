@@ -1,25 +1,23 @@
 import { IStorage } from "../../lib/@types/interfaces/storage.interface.ts";
 // import { Storage } from "@lara-io/fecades";
+import { storagePath, publicPath } from "@lara-io/helpers";
 import { env } from "@lara-io/utils";
 export default (): IStorage => ({
   disks: {
     local: {
       driver: "local",
-      root: "",
-      // root: Storage.public_path(),
+      root: storagePath("app"),
     },
 
     public: {
       driver: "local",
-      // root: Storage.storage_path("app/public"),
+      root: storagePath("app/public"),
       url: `${env("APP_URL", "http://localhost")}/storage/`,
-      root: "",
     },
 
     works: {
       driver: "local",
-      root: "",
-      // root: Storage.storage_path(),
+      root: storagePath("app/public/works"),
     },
   },
 
@@ -30,10 +28,8 @@ export default (): IStorage => ({
    */
   links: [
     {
-      path_old: "",
-      path_new: "",
-      // path_old: Storage.public_path("storage"),
-      // path_new: Storage.storage_path("app/public"),
+      path_old: publicPath("storage"),
+      path_new: storagePath("app/public"),
     },
   ],
 });

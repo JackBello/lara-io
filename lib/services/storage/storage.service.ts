@@ -2,14 +2,14 @@ import { Service } from "../services.ts";
 // import { StorageDiskService } from "./storage-disk.service.ts"
 import { StorageDiskModule } from "./storage-disk.module.ts";
 import { getPathName, env } from "../../utils/index.ts";
-import { Fs, Path } from "../../dep.ts";
+import { Fs, Path, UUID } from "../../dep.ts";
 import { decode } from "https://deno.land/std@0.138.0/encoding/base64.ts";
 import {
   ILinks,
   IDisk,
   IInfoFile,
 } from "../../@types/interfaces/storage.interface.ts";
-
+import { TUploadedFile } from "../../@types/request.type.ts";
 export class StorageService extends Service {
   protected __disks = new StorageDiskModule(this.app);
 
@@ -22,7 +22,7 @@ export class StorageService extends Service {
     const configStorage = this.app.config("storage");
 
     const symLinks = configStorage.links;
-    // this.createSymLink(symLinks);
+    this.createSymLink(symLinks);
 
     this.device = this.__disks.disk();
   }
@@ -45,27 +45,27 @@ export class StorageService extends Service {
     }
   }
 
-  /**
-   * Get the path to the storage folder.
-   *
-   * @param {path} path
-   * @returns {string}
-   */
-  public storage_path(path?: string): string {
-    if (path) return getPathName(`src/storage/${path}`);
-    else return getPathName("src/storage/app");
-  }
+  // /**
+  //  * Get the path to the storage folder.
+  //  *
+  //  * @param {path} path
+  //  * @returns {string}
+  //  */
+  // public storage_path(path?: string): string {
+  //   if (path) return getPathName(`src/storage/${path}`);
+  //   else return getPathName("src/storage/app");
+  // }
 
-  /**
-   * Get the path to the public folder.
-   *
-   * @param {string} path
-   * @returns {string}
-   */
-  public public_path(path?: string): string {
-    if (path) return getPathName(`src/public/${path}`);
-    else return getPathName("src/public");
-  }
+  // /**
+  //  * Get the path to the public folder.
+  //  *
+  //  * @param {string} path
+  //  * @returns {string}
+  //  */
+  // public public_path(path?: string): string {
+  //   if (path) return getPathName(`src/public/${path}`);
+  //   else return getPathName("src/public");
+  // }
 
   /**
    * Get the disk.
@@ -137,50 +137,66 @@ export class StorageService extends Service {
     }
   }
 
-  public  put(path: string, contents: string) {
+  public put(path: string, contents: Uint8Array): boolean {
     try {
       const filePath = this.path(path);
-      // const file = Deno.openSync(filePath, { read: true, write: true, append: true });
-      const file = Deno.openSync(filePath, { create: true, write: true });
 
+      if (contents) Deno.writeFileSync(filePath, contents);
 
-      // const fileContent = new Promise(function (resolve) {
-      //   const reader = new FileReader();
-
-      //   reader.onloadend = function () {
-      //     resolve(reader.result);
-      //   };
-
-      //   reader.readAsArrayBuffer(contents);
-      // });
-
-      // const fileContent = await contents.arrayBuffer()
-      // file.writeSync(new Uint8Array(fileContent));
-      console.log(file, contents);
-      file.close()
-      // const response = await fetch(
-      //   "https://www.artify.co/images/auto/logo-bold-ok.png"
-      //   );
-      // const data = await response.arrayBuffer();
-      // console.log("array unut",data)
-      // console.log("array unut", new Uint8Array(data))
-      // const encoder = new TextEncoder();
-      // const buffer = encoder.encode(data);
-      // Deno.writeFileSync(filePath, new Uint8Array(buffer));
-      // console.log("contents", contents);
-      // const open = Deno.openSync(filePath, {
-      //   read: true,
-      //   write: true,
-      //   truncate: true,
-
-      // });
-      // open.writeSync(new Uint8Array(open.rid));
-      // Deno.close(open.rid);
       return true;
     } catch (error) {
       console.log(error.message);
       return false;
     }
+  }
+
+  public putFile(path: string, contents: TUploadedFile): string | false {
+    try {
+      const fileName = `${UUID.uuid()}.${contents.extension}`;
+
+      return this.putFileAs(path, contents, fileName);
+    } catch (error) {
+      console.log(error);
+      return "error";
+    }
+  }
+
+  public putFileAs(
+    path: string,
+    contents: TUploadedFile,
+    name: string
+  ): string | false {
+    try {
+      const directoryPath = this.path(path);
+      Fs.ensureDirSync(directoryPath);
+
+      const fileContent = contents.getContent();
+      const filePath = `${path}/${name}`;
+
+      return this.put(filePath, fileContent)
+        ? `${directoryPath}/${name}`
+        : false;
+    } catch (error) {
+      console.log(error);
+      return "error";
+    }
+  }
+
+  public delete(path: string | Array<string>): boolean {
+    const paths = Array.isArray(path) ? path : [path];
+    let success = true;
+    paths.forEach((currentPath) => {
+      try {
+        const filePath = this.path(currentPath);
+        // if (!this.exists(currentPath))
+        Deno.removeSync(filePath)
+        // if (!Deno.removeSync(filePath)) success = false;
+      } catch (error) {
+        success = false;
+        // throw new Deno.errors.NotFound(error.message);
+      }
+    });
+    return success;
   }
 
   /**
