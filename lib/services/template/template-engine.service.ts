@@ -74,8 +74,22 @@ export class TemplateEngineService extends Service {
         return new Response(result, { headers: { "Content-Type": "text/html" }, status: 200 });
     }
 
+    public exists(view: string) {
+        return Deno.statSync(`${this.__pathViews}${view}.${this.__engine}`).isFile;
+    }
+
+    public create() {
+
+    }
+
     public share(values: any) {
         this.shared = this.engine.share(values);
+    }
+
+    public preloadData(data: any) {
+        for (const key in data) {
+            this.context[key] = data[key];
+        }
     }
 
     public registerHelper(name: string, helper: any) {

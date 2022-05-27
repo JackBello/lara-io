@@ -2,6 +2,7 @@ import { RouterConfig } from '@lara-io/types';
 
 export default (): RouterConfig => ({
     strict: true,
+    indexes: true,
 
     files: [
         {

@@ -100,7 +100,7 @@ export type TStorage = {
 export type TTemplate = {
     render(html: string, data?: any): Promise<string>,
     view(view: string, data?: any): Promise<string>,
-    share(values: string): void,
+    share(values: any): void,
     registerEngine(name: string, engine: any): void,
     registerHelper(name: string, helper: any): void,
     registerFecace(name: string, fecace: any): void,
@@ -119,6 +119,7 @@ export type ApplicationConfig = {
 
 export type RouterConfig = {
     strict: boolean;
+    indexes: boolean;
     files: Array<IRouterFile>;
     routes?: Array<IRouteConfig>;
 }

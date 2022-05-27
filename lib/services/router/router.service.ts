@@ -123,8 +123,10 @@ export class RouterService extends Service {
             if (url.match(regExp)) return route;
         })[0];
 
-        if (!route && this.__statics && extname(pathname))
-                return await this.__statics.getFile(pathname);
+        if (!route && this.__statics && extname(pathname) === "")
+            return this.__statics.getFolder(pathname);
+        else if (!route && this.__statics && extname(pathname) !== "")
+            return await this.__statics.getFile(pathname);
         else if (!route) throw new Error(`This url '${pathname}' no exist to router`);
 
         if (route.redirect)

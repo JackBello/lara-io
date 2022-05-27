@@ -29,7 +29,13 @@ export class RouterMiddlewareService extends Service {
     }
 
     public add(middleware: any) {
-        this.stack.push(middleware);
+        if (typeof middleware === "string") {
+            //
+        } else if (typeof middleware === "function") {
+            this.stack.push(middleware);
+        } else if (Array.isArray(middleware)) {
+            //
+        }
     }
 
     public async run() {
