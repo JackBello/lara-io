@@ -17,7 +17,7 @@ Route.get("/atom", "test", () => {
 
     return view("test", { data: "Welcome", name: "Deno", history: "papa" });
 }, ({ request }, next) => {
-    if (!request.user) {
+    if (request.user) {
         return view("404");
     } else {
         next();
@@ -67,6 +67,8 @@ Route.prefix("user").group(() => {
     });
 
     Route.get("/{id?}/{type?}", "user.id", (context, id: number, type: string) => {
+        console.log(context);
+        
         if (type) {
             return `user ${id} ${type}`;
         }
@@ -78,9 +80,7 @@ Route.prefix("user").group(() => {
     });
 });
 
-Route.get("/cars", "cars", (context) => {
-    console.log(context);
-
+Route.get("/cars", "cars", () => {
     return "cars";
 });
 

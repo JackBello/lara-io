@@ -176,15 +176,21 @@ export class EngineAtom {
 @case()
 @default()
 @endswitch;
+@with()
+@endwith;
+@do;
 
-@do
+@function(name, params)
 
+@endfunction;
+
+@excapehtml()
 @includes()
 @extends()
+@component()
 @auth()
 @env()
 @csrf()
 @session()
 @route()
-@app.route("/<str:msg>")
 */
