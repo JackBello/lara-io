@@ -1,4 +1,4 @@
-import { IDisks, IDisk } from "../../@types/interfaces/storage.interface.ts";
+import { IDisks, IDisk } from "../../@types/storage.interface.ts";
 import { Application } from "../../fundation/application.ts";
 
 export class StorageDiskModule {

@@ -8,8 +8,8 @@ import {
   ILinks,
   IDisk,
   IInfoFile,
-} from "../../@types/interfaces/storage.interface.ts";
-import { TUploadedFile } from "../../@types/request.type.ts";
+} from "../../@types/storage.interface.ts";
+import { TUploadedFile } from "../../@types/request.ts";
 export class StorageService extends Service {
   protected __disks = new StorageDiskModule(this.app);
 

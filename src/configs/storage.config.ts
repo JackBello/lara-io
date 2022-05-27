@@ -1,4 +1,4 @@
-import { IStorage } from "../../lib/@types/interfaces/storage.interface.ts";
+import { IStorage } from "../../lib/@types/storage.interface.ts";
 // import { Storage } from "@lara-io/fecades";
 import { storagePath, publicPath } from "@lara-io/helpers";
 import { env } from "@lara-io/utils";

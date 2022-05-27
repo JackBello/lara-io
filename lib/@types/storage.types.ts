@@ -1,5 +1,5 @@
-import { IDisk, IInfoFile } from "./interfaces/storage.interface.ts";
-import { TUploadedFile } from './request.type.ts';
+import { IDisk, IInfoFile } from "./storage.interface.ts";
+import { TUploadedFile } from './request.ts';
 
 export type TStorage = {
   // storage_path: (path?: string) => string;
