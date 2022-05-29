@@ -1,1 +1,0 @@
-import "./boot/index.ts";
