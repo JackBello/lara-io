@@ -1,2 +1,4 @@
-.env
-.vscode
+/.vscode
+tasks.txt
+tsconfig.json
+log.ts
