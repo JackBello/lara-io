@@ -169,7 +169,7 @@ export class HttpRequest {
 
         const urlPattern: URLPattern = new URLPattern(this.__request.url);
 
-        return `${urlPattern.protocol}//${urlPattern.hostname}`;
+        return `${urlPattern.protocol}://${urlPattern.hostname}`;
     }
 
     private getUri() {
