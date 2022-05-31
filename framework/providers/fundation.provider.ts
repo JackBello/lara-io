@@ -113,6 +113,8 @@ export class FundationProvider extends Provider{
 
         $routerStatics.setPathStatics(statics);
 
+        $routerStatics.setHostname(hostname);
+
         $router.sethostname(hostname);
 
         $router.setPathController(http);
@@ -136,6 +138,8 @@ export class FundationProvider extends Provider{
         $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {
             $httpRequest.setRequest(request);
             $httpRequest.setConnection(connection);
+
+            $routerStatics.setRequest(request);
 
             $routerHistory.setUrl(request.url);
 

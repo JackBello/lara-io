@@ -5,14 +5,11 @@ import Route from './route.ts';
 
 import { template } from '../../helpers/miscellaneous.ts';
 
-import folderAtom from '../../fundation/templates/folder.atom.ts'
+import folderAtom from '../../fundation/templates/folder.atom.ts';
 
-import { MimeTypeByExtension } from '../../fundation/http/http-mimetypes.ts';
+import { serveFile } from "https://deno.land/std@0.141.0/http/file_server.ts";
 
-import { Path, Streams } from '../../dependencies.ts';
-
-const { extname } = Path;
-const { readableStreamFromReader } = Streams;
+import { TRequest } from '../../@types/server.ts';
 
 type TContent = {
     name: string;
@@ -29,9 +26,19 @@ type TInformation = {
 
 export class RouterStaticsService extends Service {
     protected __pathStatics: string = "";
+    protected __hostname: string = "";
+    protected __request: TRequest;
 
     public setPathStatics(path: string) {
         this.__pathStatics = path;
+    }
+
+    public setRequest(request: TRequest) {
+        this.__request = request;
+    }
+
+    public setHostname(hostname: string) {
+        this.__hostname = hostname;
     }
 
     public async getFolder(pathname: string) {
@@ -41,7 +48,7 @@ export class RouterStaticsService extends Service {
 
         const information: TInformation = {
             path: "",
-            content: []
+            content: [],
         }
 
         try {
@@ -72,24 +79,12 @@ export class RouterStaticsService extends Service {
         return new Route(pathname, undefined, handle);
     }
 
-    public async getFile(pathname: string)  {
+    public getFile(pathname: string)  {
         if (!this.__pathStatics) throw new Error("Static path not set");
 
-        let file: Deno.FsFile, filePath: string, extension: string, mimeType: string;
+        const filePath = `${this.__pathStatics}${pathname}`;
 
-        try {
-            filePath = `${this.__pathStatics}${pathname}`;
-            extension = extname(filePath);
-
-            if (extension) {
-                file = await Deno.open(filePath, { read: true });
-                mimeType = MimeTypeByExtension[extension];
-            }
-        } catch {
-            throw new Error(`This url '${pathname}' no exist to router`);
-        }
-
-        const handle = () => new Response(readableStreamFromReader(file), { headers: { "content-type": mimeType }, status: 200 });
+        const handle = async () => await serveFile(this.__request, filePath);
 
         return new Route(pathname, undefined, handle);
     }

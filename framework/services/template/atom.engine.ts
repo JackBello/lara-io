@@ -6,7 +6,7 @@ export class EngineAtom {
     private code = "const result = [];\n";
     private isJS = false;
     private isDoWhile = false;
-    private matchHelpers = /(app|service|config|history|request|appPath|configPath|databasePath|ecosystemPath|publicPath|resourcePath|routerPath)/g;
+    private matchHelpers = /(app|service|config|history|request|appPath|configPath|databasePath|ecosystemPath|publicPath|resourcePath|routerPath|storagePath|^css|^script)/g;
     private matchFecades = /(App|History|Request)/g;
 
     public registerDirective(name: string, func: Function) {

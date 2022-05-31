@@ -5,7 +5,9 @@ import { history, request, config, service, app } from '../../helpers/miscellane
 
 import { History, HttpRequest, App } from '../../modules/fecades.ts';
 
-import { appPath, configPath, databasePath, ecosystemPath, publicPath, resourcePath, routerPath } from '../../helpers/paths.ts';
+import { appPath, configPath, databasePath, ecosystemPath, publicPath, resourcePath, routerPath, storagePath } from '../../helpers/paths.ts';
+
+import { css, script } from '../../helpers/urls.ts';
 
 import defaultContent from './default-content.ts';
 
@@ -34,6 +36,9 @@ export class TemplateEngineService extends Service {
         'publicPath': publicPath,
         'resourcePath': resourcePath,
         'routerPath': routerPath,
+        'storagePath': storagePath,
+        'css': css,
+        'script': script,
     };
 
     private global: any = {};
