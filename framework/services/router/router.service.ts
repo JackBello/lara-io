@@ -23,7 +23,7 @@ export class RouterService extends Service {
     protected __strict?: boolean;
 
     protected __currentRoute?: Route;
-    protected __paramsRoute?: any;
+    protected __paramsRoute?: any = [];
 
     protected _context_: any;
 
@@ -59,6 +59,8 @@ export class RouterService extends Service {
 
         if (!this.__request) throw new Error("the request undefined");
         else request = this.__request;
+
+        if (uri.startsWith("/{*}")) return [];
 
         const pattern: URLPattern = new URLPattern(request.url);
 
@@ -108,32 +110,41 @@ export class RouterService extends Service {
         const hostname: string = pattern.hostname;
         const url = `${hostname}${pathname}`;
 
-        const route: Route = this.__routes.filter(route => {
+        let route: Route;
+
+        route = this.__routes.filter(route => {
             const uriPattern: string | string[] = route.regexp ? route.regexp : "[a-zA-Z0-9]+";
 
             const domain = `${route.domain}`
                 .replace(/\{[a-z]+\}/g,"[a-zA-Z0-9]+");
 
             const uri = `${route.uri}`
+                .replace(/\{\*\}/g, "((.*?)|)")
                 .replace(/\/\{[a-z]+\?\}/g, `(\/${uriPattern}|)`)
-                .replace(/\/\{[a-z]+\}/g, `\/${uriPattern}`)
+                .replace(/\{[a-z]+\}/g, `${uriPattern}`)
 
             const regExp = new RegExp(`^${domain}${uri}$`);
 
             if (url.match(regExp)) return route;
         })[0];
 
-        if (!route && this.__statics && extname(pathname) === "")
-            return this.__statics.getFolder(pathname);
-        else if (!route && this.__statics && extname(pathname) !== "")
-            return await this.__statics.getFile(pathname);
-        else if (!route) throw new Error(`This url '${pathname}' no exist to router`);
+        if (this.__statics && extname(pathname) !== "")
+            route = await this.__statics.getFile(pathname);
 
-        if (route.redirect)
+        if (!route) {
+            if (this.__statics && extname(pathname) === "")
+                route = await this.__statics.getFolder(pathname);
+            else
+                throw new Error("the route not found");
+        }
+
+        if (route?.redirect)
             return route;
 
-        if (method !== route.method)
-            throw new Error(`This method '${method}' is not support in this route '${route.uri}'`)
+        if (route?.method) {
+            if (method !== route.method)
+                throw new Error(`This method '${method}' is not support in this route '${route.uri}'`)
+        }
 
         return route;
     }
