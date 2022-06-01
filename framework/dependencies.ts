@@ -1,4 +1,4 @@
-import { Reflect as _reflect } from "https://deno.land/x/deno_reflect@v0.1.13/mod.ts";
+import { Reflect } from "https://deno.land/x/deno_reflect@v0.1.13/mod.ts";
 import { NIL_UUID, V4, isNil, isValid, uuid } from "https://deno.land/x/uuid@v0.1.2/mod.ts";
 import { delay } from "https://deno.land/std@0.129.0/async/mod.ts";
 import { fromFileUrl, dirname, resolve, toFileUrl, join, extname } from "https://deno.land/std@0.110.0/path/mod.ts";
@@ -104,7 +104,9 @@ export const Path = {
 /**
  * Reflect dependencies
  */
-export const Reflect = _reflect;
+export const Reflection = {
+    Reflect
+}
 
 /**
  * UUID dependencies
