@@ -6,7 +6,9 @@ import { IProviders, IServices, IConfigs } from '../@types/application.ts';
 import { Container } from '../container/container.ts';
 import { Fecade } from '../fecades/facade.ts';
 
-import { Reflect } from '../dependencies.ts';
+import { Reflection } from '../dependencies.ts';
+
+const { Reflect } = Reflection;
 export class Application {
     protected static _instance: Application;
 
