@@ -5,6 +5,8 @@ import { RouterService } from '../services/router/router.service.ts';
 
 import { THttpRequest, TTemplate } from '../modules/types.ts';
 
+import { StorageService } from '../services/storage/storage.service.ts';
+
 export function app() {
     return Application.instance;
 }
@@ -43,4 +45,8 @@ export function router(): RouterService {
 
 export function history(): RouterHistoryService {
     return service("router/history");
+}
+
+export function storage(): StorageService {
+    return app().make('@service/storage', {});
 }
