@@ -1,0 +1,12 @@
+{
+    "imports": {
+        "@lara-id": "https://raw.githubusercontent.com/JackBello/lara-io/master/framework/modules/types.ts",
+        "@lara-io/types": "https://raw.githubusercontent.com/JackBello/lara-io/master/framework/modules/types.ts",
+        "@lara-io/core": "https://raw.githubusercontent.com/JackBello/lara-io/master/framework/modules/core.ts",
+        "@lara-io/configs": "https://raw.githubusercontent.com/JackBello/lara-io/master/framework/modules/configs.ts",
+        "@lara-io/helpers": "https://raw.githubusercontent.com/JackBello/lara-io/master/framework/modules/helpers.ts",
+        "@lara-io/fecades": "https://raw.githubusercontent.com/JackBello/lara-io/master/framework/modules/fecades.ts",
+        "@lara-io/services": "https://raw.githubusercontent.com/JackBello/lara-io/master/framework/modules/services.ts",
+        "@lara-io/providers": "https://raw.githubusercontent.com/JackBello/lara-io/master/framework/modules/providers.ts"
+    }
+}
