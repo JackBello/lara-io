@@ -103,7 +103,7 @@ async function unzipProyect(path:string, os: string) {
     }
 }
 
-export default async function createProyect(name: string, path: string, os: string) {
+export default async function create(name: string, path: string, os: string) {
     const _BASIC_ENV_ = `
     APP_NAME="${name}"
     APP_ENV=local
