@@ -66,6 +66,10 @@ export class Application {
         this.executeBootProviders();
     }
 
+    public async serve() {
+        await this.service("server").initServer();
+    }
+
     protected bootConfigs(configs: IConfigs[]) {
         configs.forEach((config: IConfigs) => {
             this.registerConfig(config.name, config.instance);

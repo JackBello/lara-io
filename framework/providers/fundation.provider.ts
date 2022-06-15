@@ -91,12 +91,11 @@ export class FundationProvider extends Provider{
         });
     }
 
-    async boot() {
+    boot() {
         const $httpRequest = this.app.use('http/request');
 
         const $routeContext = this.app.use("route/context");
 
-        const $server = this.app.service("server");
         const $serverHandle = this.app.service('server/handle');
 
         const $router = this.app.service('router');
@@ -159,7 +158,5 @@ export class FundationProvider extends Provider{
 
             return await $router.lookPetitions();
         });
-
-        await $server.initServer();
     }
 }
