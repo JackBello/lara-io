@@ -3,6 +3,7 @@ import { IRouterFile, IRouteConfig, IHistoryRoute, IRoute, TAction, TMiddleware 
 import { TUploadedFile, TRequestServer } from '../@types/request.ts';
 import { IAppPaths, IPath, IProviders, IServices, IConfigs } from '../@types/application.ts';
 import { TMethodHTTP, TAllMethodHTTP } from '../@types/server.ts';
+import { IInfoFile, IDisks, ILinks } from "../@types/storage.ts"
 
 export type TRouteContext = {
     [index: string]: any;
@@ -94,7 +95,29 @@ export type TRouter = {
 }
 
 export type TStorage = {
-
+    exists: (path: string) => boolean;
+    missing: (path: string) => boolean;
+    get: (path: string) => string;
+    put: (path: string, contents: Uint8Array) => boolean;
+    putFile: (path: string, contents: TUploadedFile) => string
+    putFileAs: (path: string, contents: TUploadedFile, name: string) => string
+    delete: (path: string | Array<string>) => boolean
+    path: (path: string) => string;
+    url: (path: string) => string;
+    info: (path: string) => IInfoFile;
+    name: (path: string) => string;
+    baseName: (path: string) => string;
+    dirName: (path: string) => string;
+    extension: (path: string) => string;
+    fileInfo(path: string): Deno.FileInfo;
+    size(path: string): number;
+    lastModified(path: string): Date | null;
+    lasAccessed(path: string): Date | null;
+    creationDate(path: string): Date | null;
+    isDirectory(path: string): boolean;
+    isFile(path: string): boolean;
+    isSymlink(path: string): boolean;
+    disk: (name?: string | null) => TStorage;
 }
 
 export type TTemplate = {
@@ -131,4 +154,10 @@ export type ServerConfig = {
     certFile?: string,
     keyFile?: string,
     protocols?: string[],
+}
+
+export type StorageConfig = {
+    disks: IDisks;
+    links: ILinks[];
+    default: string;
 }

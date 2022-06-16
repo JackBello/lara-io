@@ -20,6 +20,8 @@ import { ServerService } from '../services/server/server.service.ts';
 
 import { view, service, config } from '../helpers/miscellaneous.ts'
 
+import { StorageService } from '../services/storage/storage.service.ts';
+
 export class FundationProvider extends Provider{
     register() {
         this.app.registerService("template/engine", TemplateEngineService, {
@@ -81,6 +83,12 @@ export class FundationProvider extends Provider{
             isCallback: true,
             configService: {}
         });
+
+        this.app.registerService('storage', StorageService, {
+            isSingleton: true,
+            isCallback: true,
+            configService: {}
+        });
     }
 
     boot() {
@@ -103,6 +111,8 @@ export class FundationProvider extends Provider{
         const { http } = this.app.config("paths/app");
 
         const { hostname } = this.app.config("server");
+
+        const $storage = this.app.service('storage');
 
         $templateEngine.setPathViews(resources);
 
@@ -133,6 +143,8 @@ export class FundationProvider extends Provider{
         $routeContext.inject("view", view);
         $routeContext.inject("config", config);
         $routeContext.inject("service", service);
+
+        $storage.initStorage();
 
         $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {
             $httpRequest.setRequest(request);
