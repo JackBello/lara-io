@@ -27,6 +27,10 @@ export class Container {
         this._instance = instance;
     }
 
+    public has(abstract: string){
+        return this._bindings.has(abstract);
+    }
+
     public bind(abstract: string, callback: any, shared = false){
         this.register(abstract, callback, shared, true);
     }
@@ -86,8 +90,8 @@ export class Container {
         if (concrete === null)
             return concrete;
 
-        if (!Array.isArray(parameters)) 
-            parameters = Object.keys(parameters).map((key: string) => parameters[key]);        
+        if (!Array.isArray(parameters))
+            parameters = Object.keys(parameters).map((key: string) => parameters[key]);
 
         return new concrete(...parameters);
     }

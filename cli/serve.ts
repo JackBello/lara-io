@@ -19,7 +19,7 @@ export default async function serve(path: string, flags: any) {
                 "--allow-env",
                 "--import-map",
                 `${path}\\imports.json`,
-                `${path}\\src\\main.ts`,
+                `${path}\\boot\\index.ts`,
             ],
         });
 

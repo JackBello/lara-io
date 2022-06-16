@@ -79,7 +79,7 @@ export type TRouter = {
     patch: (uri: string, name: string, action: TAction, middleware?: TMiddleware) => void;
     match: (methods: TMethodHTTP, uri: string, name: string, action: TAction, middleware?: TMiddleware) => void;
     any: (uri: string, name: string, action: TAction, middleware?: TMiddleware) => void;
-    
+
     middleware: (middleware: any) => TRouter;
     controller: (controller: any) => TRouter;
     domain: (domain: string) => TRouter;
@@ -120,7 +120,7 @@ export type ApplicationConfig = {
 export type RouterConfig = {
     strict: boolean;
     indexes: boolean;
-    files: Array<IRouterFile>;
+    files?: Array<IRouterFile>;
     routes?: Array<IRouteConfig>;
 }
 

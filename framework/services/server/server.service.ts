@@ -11,6 +11,7 @@ const { delay } = Async;
 
 export class ServerService extends Service {
     protected _closedConnection_ = false;
+    protected _running_ = false;
 
     protected _listeners_: Set<Deno.Listener> = new Set();
     protected _httpConnections_: Set<Deno.HttpConn> = new Set();
@@ -18,6 +19,10 @@ export class ServerService extends Service {
     protected __errorServerClosed = "Server closed";
     protected __initialAcceptBackoffDelay: number = 5;
     protected __maxAcceptBackoffDelay: number = 1000;
+
+    public get running(): boolean {
+        return this._running_;
+    }
 
     public async initServer(): Promise<void> {
         const {
@@ -34,6 +39,8 @@ export class ServerService extends Service {
             port: port,
             transport: "tcp"
         });
+
+        this._running_ = true;
 
         return await this.serve(listener);
     }

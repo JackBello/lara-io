@@ -15,7 +15,7 @@ export interface IGroupConfig extends IGroup {
 }
 
 export interface IRouteConfig extends IRoute {
-    group?: IGroupConfig
+    group?: Array<IRouteConfig>
 }
 
 export interface IGroup {
