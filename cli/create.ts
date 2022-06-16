@@ -1,95 +1,44 @@
-const _ALL_ENV_ = `
-APP_NAME="lara-io"
-APP_ENV=local
-APP_KEY=
-APP_DEBUG=true
+import { presetEnvBasic } from './presets/env.ts';
+import { presetVSCode } from './presets/vscode.ts';
+import { copy } from "https://deno.land/std@0.144.0/fs/mod.ts";
 
-SERVER_NAME=localhost
-SERVER_PORT=80
-SERVER_TRANSPORT=tcp
+async function downloadProyect() {
+    const date = new Date().toISOString().split('T')[0];
 
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=db-lara-io
-DB_USERNAME=root
-DB_PASSWORD=""
-DB_ENGINE="MyISAM"
+    const temporalDirectory = await Deno.makeTempDir({prefix: `lara-io-${date}-`});
+    const temporalFile = await Deno.makeTempFile({prefix: `lara-io-${date}-`, suffix: '.zip'});
 
-BROADCAST_DRIVER=log
-CACHE_DRIVER=redis
-QUEUE_CONNECTION=sync
-SESSION_DRIVER=file
-SESSION_LIFETIME=120
-SESSION_DOMAIN=artify.test
+    const request = await fetch("https://github.com/JackBello/web-lara-io/archive/refs/heads/master.zip");
 
-REDIS_HOST=127.0.0.1
-REDIS_PASSWORD=null
-REDIS_PORT=6379
-
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.mailtrap.io
-MAIL_PORT=2525
-MAIL_USERNAME=af7ab596200298
-MAIL_PASSWORD=d9d51a05c7c087
-MAIL_ENCRYPTION=tls
-
-AWS_ACCESS_KEY_ID=null
-AWS_SECRET_ACCESS_KEY=null
-AWS_DEFAULT_REGION=null
-AWS_BUCKET=null
-
-PUSHER_APP_ID=null
-PUSHER_APP_KEY=null
-PUSHER_APP_SECRET=null
-PUSHER_APP_CLUSTER=null
-
-TELEGRAM_BOT_NAME=null
-TELEGRAM_TOKEN=null
-
-FACEBOOK_CLIENT_ID=null
-FACEBOOK_CLIENT_SECRET=null
-FACEBOOK_URL=null
-
-GOOGLE_CLIENT_ID=null
-GOOGLE_CLIENT_SECRET=null
-GOOGLE_URL=null
-`;
-
-async function downloadProyect(path:string, os: string) {
-    let proccess: Deno.Process;
-
-    if (os === "windows") {
-        proccess = Deno.run({
-            cmd: [
-                "curl",
-                "-L",
-                "https://github.com/JackBello/web-lara-io/archive/refs/heads/master.zip",
-                "--output",
-                `${path}\\master.zip`
-            ],
-            stdout: "piped",
-            stderr: "piped",
+    if (request.body) {
+        const file = await Deno.open(temporalFile, {
+            create: true,
+            write: true
         });
 
-        const { code } = await proccess.status();
-
-        if (code !== 0) {
-            console.log("Error downloading proyect");
+        for await(const chunk of request.body) {
+            file.write(chunk);
         }
+
+        file.close();
     }
+
+    return {
+        temporalDirectory,
+        temporalFile
+    };
 }
 
-async function unzipProyect(path:string, os: string) {
+async function unzipProyect(os: string, file: string, dest: string) {
     if (os === "windows") {
         const proccess = Deno.run({
             cmd: [
                 "powershell.exe",
                 "Expand-Archive",
                 "-Path",
-                path + "/master.zip",
+                file,
                 "-DestinationPath",
-                path
+                dest
             ],
             stdout: "piped",
             stderr: "piped",
@@ -104,20 +53,35 @@ async function unzipProyect(path:string, os: string) {
 }
 
 export default async function create(name: string, path: string, os: string) {
-    const _BASIC_ENV_ = `
-    APP_NAME="${name}"
-    APP_ENV=local
-    APP_DEBUG=true
+    const { temporalFile, temporalDirectory } = await downloadProyect();
 
-    SERVER_NAME=localhost
-    SERVER_PORT=80
-    SERVER_TRANSPORT=tcp
-    `;
+    await unzipProyect(os, temporalFile, temporalDirectory);
+    await copy(`${temporalDirectory}/web-lara-io-master`, `${path}/${name}`);
 
-    await downloadProyect(path, os);
-    await unzipProyect(path, os);
+    await Deno.remove(temporalFile);
+    await Deno.remove(temporalDirectory, { recursive: true });
 
-    Deno.removeSync(path + "/master.zip");
-    Deno.renameSync(path + "/web-lara-io-master", path + "/" + name);
-    Deno.writeTextFileSync(path + "/" + name + "/.env", _BASIC_ENV_);
+    await Deno.writeTextFile(`${path}/${name}/.env`, presetEnvBasic(name));
+
+    presetVSCode(`${path}/${name}`);
+
+    const initializeGit = confirm("do you want to initialize git in this project?");
+
+    if (initializeGit) {
+        const proccess = Deno.run({
+            cmd: [
+                "git",
+                "init",
+                `${path}/${name}`
+            ],
+            stdout: "piped",
+            stderr: "piped",
+        });
+
+        const { code } = await proccess.status();
+
+        if (code !== 0) {
+            console.log("Error initializing git");
+        }
+    }
 }

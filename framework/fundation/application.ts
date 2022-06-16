@@ -52,7 +52,7 @@ export class Application {
         Application.instance = this;
     }
 
-    public boot() {
+    public async boot() {
         const { providers, services, paths, configs, app } = this.config("app");
 
         this.registerConfig("paths", () => (paths));
@@ -63,7 +63,7 @@ export class Application {
         this.bootProviders(providers);
 
         this.executeRegisterProviders();
-        this.executeBootProviders();
+        await this.executeBootProviders();
     }
 
     public async serve() {
@@ -108,16 +108,33 @@ export class Application {
         return this.__container.make(`@provider/${name}`, {});
     }
 
-    public executeRegisterProviders() {
-        this._providers.forEach(name => {
-            this.__container.make(name, {}).register();
-        });
+    public hasCustom(name: string) {
+        return this._customs.includes(`@/${name}`);
     }
 
-    public executeBootProviders() {
-        this._providers.forEach(name => {
-            this.__container.make(name, {}).boot();
-        });
+    public hasService(name: string) {
+        return this.__container.has(`@service/${name}`);
+    }
+
+    public hasConfig(name: string) {
+        return this.__container.has(`@config/${name}`);
+    }
+
+    public hasProvider(name: string) {
+        return this.__container.has(`@provider/${name}`);
+    }
+
+    public executeRegisterProviders() {
+        for (const name of this._providers) {
+            this.__container.make(name, {}).register();
+
+        }
+    }
+
+    public async executeBootProviders() {
+        for (const name of this._providers) {
+            await this.__container.make(name, {}).boot();
+        }
     }
 
     public resolveDependencies(target: any, methodName: string) {

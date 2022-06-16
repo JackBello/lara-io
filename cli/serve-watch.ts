@@ -13,7 +13,7 @@ export default async function serveWatch(path: string) {
             "--allow-env",
             "--import-map",
             `${path}\\imports.json`,
-            `${path}\\src\\main.ts`,
+            `${path}\\boot\\index.ts`,
         ],
     });
 
@@ -35,7 +35,7 @@ export default async function serveWatch(path: string) {
                 "--allow-env",
                 "--import-map",
                 `${path}\\imports.json`,
-                `${path}\\src\\main.ts`,
+                `${path}\\boot\\index.ts`,
             ],
         });
     }

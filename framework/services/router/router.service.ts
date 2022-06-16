@@ -248,7 +248,7 @@ export class RouterService extends Service {
         await import(routes);
     }
 
-    protected registerRoute(setting: ISettingRoute, action: any) {
+    public registerRoute(setting: ISettingRoute, action: any) {
         const {
             uri,
             method,

@@ -143,7 +143,7 @@ export type ApplicationConfig = {
 export type RouterConfig = {
     strict: boolean;
     indexes: boolean;
-    files: Array<IRouterFile>;
+    files?: Array<IRouterFile>;
     routes?: Array<IRouteConfig>;
 }
 
