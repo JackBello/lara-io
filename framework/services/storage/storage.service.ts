@@ -14,6 +14,10 @@ import {
     execUrl,
     execInfo,
     execFileInfo,
+    execDownload,
+    execAppendOrPrepend,
+    execCopy,
+    execMove
 } from "./storage.services.functions.ts";
 export class StorageService extends Service {
     protected __disks = new StorageDiskModule(this.app);
@@ -114,6 +118,24 @@ export class StorageService extends Service {
 
             isSymlink: (path: string): boolean =>
                 execFileInfo(this, path, diskName).isSymlink,
+
+            download: (
+                path: string,
+                name?: string,
+                headers?: Array<string>
+            ): any => execDownload(this, path, name, headers, diskName),
+
+            append: (path: string, content: string): void =>
+                execAppendOrPrepend(this, path, content, "append", diskName),
+
+            prepend: (path: string, content: string): void =>
+                execAppendOrPrepend(this, path, content, "prepend", diskName),
+
+            copy: (from: string, to: string): boolean =>
+                execCopy(this, from, to, diskName),
+
+            move: (from: string, to: string): boolean =>
+                execMove(this, from, to, diskName),
         };
     }
 
@@ -192,6 +214,25 @@ export class StorageService extends Service {
         return execDelete(this, path);
     }
 
+    public download(path: string, name?: string, headers?: Array<string>) {
+        return execDownload(this, path, name, headers);
+    }
+
+    public append(path: string, contents: string) {
+        return execAppendOrPrepend(this, path, contents, "append");
+    }
+
+    public prepend(path: string, contents: string) {
+        return execAppendOrPrepend(this, path, contents, "prepend");
+    }
+
+    public copy(from: string, to: string): boolean {
+        return execCopy(this, from, to)
+    }
+
+    public move(from: string, to: string): boolean {
+        return execMove(this, from, to)
+    }
     /**
      * Concatenate a path to a URL.
      *

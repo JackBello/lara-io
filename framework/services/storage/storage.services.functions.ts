@@ -1,7 +1,8 @@
 import { StorageService } from "./storage.service.ts";
 import { TUploadedFile } from "../../@types/request.ts";
-import { Fs, Path, UUID } from "../../dependencies.ts";
+import { Fs, Path, UUID, Streams } from "../../dependencies.ts";
 import { IInfoFile } from "../../@types/storage.ts";
+import { MimeTypeByExtension } from "../../fundation/http/http-mimetypes.ts";
 export const execExists = (
     context: StorageService,
     path: string,
@@ -108,6 +109,41 @@ export const execDelete = (
     return success;
 };
 
+export const execDownload = (
+    context: StorageService,
+    path: string,
+    name?: string,
+    headersRequest?: Array<string>,
+    disk?: string
+) => {
+    try {
+        let file: Deno.FsFile;
+        let fileName: string;
+        let mimetype: string;
+        let fileSize: number;
+        let fileExtension: string;
+        const pathFile = context.path(path, disk);
+
+        file = Deno.openSync(pathFile, { read: true });
+        fileExtension = context.extension(path);
+        fileName = name ? `${name}.${fileExtension}` : context.baseName(path);
+        mimetype = MimeTypeByExtension[`.${fileExtension}`];
+        fileSize = context.disk(disk).size(path);
+
+        return new Response(Streams.readableStreamFromReader(file), {
+            headers: {
+                "Content-Type": mimetype,
+                "Content-Length": fileSize.toString(),
+                "Content-Disposition": `attachment; filename=${fileName}`,
+            },
+
+            status: 200,
+        });
+    } catch (error) {
+        throw new Deno.errors.NotFound(error.message);
+    }
+};
+
 export const execUrl = (
     context: StorageService,
     path: string,
@@ -158,5 +194,74 @@ export const execFileInfo = (
             throw new Deno.errors.PermissionDenied(error.message);
 
         throw new Deno.errors.NotFound(error.message);
+    }
+};
+
+export const execAppendOrPrepend = (
+    context: StorageService,
+    path: string,
+    content: string,
+    type: string,
+    disk?: string
+) => {
+    const filePath = context.path(path, disk);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(content + "\n");
+
+    const fileWirite = Deno.openSync(filePath, {
+        create: true,
+        write: true,
+        read: true,
+    });
+    const fileRead = Deno.readFileSync(filePath);
+
+    const buffer = new Uint8Array(fileRead.length + data.length);
+
+    if (type == "prepend") {
+        buffer.set(data);
+        buffer.set(fileRead, data.length);
+    }
+
+    if (type == "append") {
+        buffer.set(fileRead);
+        buffer.set(data, fileRead.length);
+    }
+
+    fileWirite.writeSync(buffer);
+    fileWirite.close();
+};
+
+export const execCopy = (
+    context: StorageService,
+    from: string,
+    to: string,
+    disk?: string
+): boolean => {
+    try {
+        const pathFrom = context.path(from, disk);
+        const pathTo = context.path(to, disk);
+        Deno.copyFileSync(pathFrom, pathTo);
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
+    }
+};
+
+export const execMove = (
+    context: StorageService,
+    from: string,
+    to: string,
+    disk?: string
+): boolean => {
+    try {
+        const pathFrom = context.path(from, disk);
+        const pathTo = context.path(to, disk);
+
+        Deno.renameSync(pathFrom, pathTo);
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
     }
 };
