@@ -1,5 +1,5 @@
 export default async function serveWatch(path: string) {
-    const watcher = Deno.watchFs(`${path}\\src`);
+    const watcher = Deno.watchFs(`${path}`);
 
     let proccess = Deno.run({
         cmd: [
@@ -7,6 +7,7 @@ export default async function serveWatch(path: string) {
             "run",
             "-c",
             `${path}\\tsconfig.json`,
+            "--unstable",
             "--allow-read",
             "--allow-write",
             "--allow-net",
@@ -19,7 +20,6 @@ export default async function serveWatch(path: string) {
 
     for await (const event of watcher) {
         event;
-        // console.log(">>>> event", event);
 
         Deno.close(proccess.rid);
 
@@ -29,6 +29,7 @@ export default async function serveWatch(path: string) {
                 "run",
                 "-c",
                 `${path}\\tsconfig.json`,
+                "--unstable",
                 "--allow-read",
                 "--allow-write",
                 "--allow-net",

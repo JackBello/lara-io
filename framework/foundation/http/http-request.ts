@@ -1,8 +1,9 @@
 // deno-lint-ignore-file no-explicit-any no-inferrable-types
-import { IConnectionInfo } from '../../../@types/server.ts';
-import { IRoute } from '../../../@types/route.ts';
-import { HttpUploadedFile } from '../http-uploaded-file.ts';
-import { conversionXML, conversionYAML, Streams, Mime, Cookies } from '../../../dependencies.ts';
+import { IConnectionInfo } from '../../@types/server.ts';
+import { IRoute } from '../../@types/route.ts';
+import { HttpUploadedFile } from './http-uploaded-file.ts';
+import { formatter } from '../../helpers/utils.ts';
+import { conversionXML, conversionYAML, Streams, Mime, Cookies } from '../../dependencies.ts';
 
 const { readerFromStreamReader } = Streams
 
@@ -28,8 +29,8 @@ export class HttpRequest {
     private $files: Record<string, HttpUploadedFile> = {};
     private $cookies: Record<string, string> = {};
     private $route?: IRoute = undefined;
-    private $params: any = {};
-    private $query: any = {};
+    private $params: Record<string, any> = {};
+    private $query: Record<string, any> = {};
     private $method: string = "";
     private $baseUrl: string = "";
     private $baseUri: string = "";
@@ -121,9 +122,11 @@ export class HttpRequest {
     }
 
     private getSubdomain() {
-        if (!this.__route) throw new Error("Route not found");
+        if (!this.__request) throw new Error("Request not found");
 
-        return this.route?.domain ? this.route.domain : "";
+        const urlPattern: URLPattern = new URLPattern(this.__request.url);
+
+        return urlPattern.hostname;
     }
 
     private getCookies() {
@@ -147,13 +150,13 @@ export class HttpRequest {
     }
 
     private getRoute() {
-        if (!this.__route) throw new Error("Route not found");
+        if (!this.__route) undefined
 
         return this.__route;
     }
 
     private getParams() {
-        if (!this.__params) throw new Error("Params not found");
+        if (!this.__params) return [];
 
         return this.__params;
     }
@@ -187,10 +190,10 @@ export class HttpRequest {
 
         const searchParams = new URLSearchParams(urlPattern.search);
 
-        const query: Record<string, string> = {};
+        const query: Record<string, any> = {};
 
         searchParams.forEach((value, key) => {
-            query[key] = value;
+            query[key] = formatter(value);
         });
 
         return query;
@@ -342,6 +345,8 @@ export class HttpRequest {
     }
 
     private getBearerToken() {
+        if (!this.__request) throw new Error("Request not found");
+
         const authorization = this.headers["authorization"];
 
         if (!authorization) return "";
@@ -352,6 +357,8 @@ export class HttpRequest {
     }
 
     private getAccepts() {
+        if (!this.__request) throw new Error("Request not found");
+
         const accept = this.headers["accept"];
 
         if (!accept) return [];

@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-inferrable-types
+// deno-lint-ignore-file no-inferrable-types no-explicit-any
 import { Service } from '../services.ts';
 
 import { Async } from '../../dependencies.ts';
@@ -7,9 +7,12 @@ import { IConnectionInfo, ISettingServer } from '../../@types/server.ts';
 
 import { ServerHandleService } from './server-handle.service.ts';
 
+import { HandlerException } from '../../foundation/exceptions/handler-exceptions.ts';
+
 const { delay } = Async;
 
 export class ServerService extends Service {
+    protected __handler: HandlerException = this.app.make("@handler", {});
     protected _closedConnection_ = false;
     protected _running_ = false;
 
@@ -57,10 +60,38 @@ export class ServerService extends Service {
 
             try {
                 listener.close();
-            } catch {
+            } catch(exception) {
+                this.__handler.report(exception);
                 // Listener has already been closed.
             }
         }
+    }
+
+    public serveResponse(content: any, headers: Headers) {
+        try {
+            return this.prepareResponse(content, headers);
+        } catch (exception) {
+            this.__handler.report(exception);
+        }
+    }
+
+    protected prepareResponse(body: any, headers: Headers) {
+        if (body instanceof Response) {
+            for(const [key, value] of headers.entries()) body.headers.set(key, value);
+            return body;
+        }
+
+        else if (typeof body === "string" || typeof body === "number" || typeof body === "boolean" || typeof body === "bigint") {
+            headers.set("Content-Type", "text/plain");
+            return new Response(`${body}`, { status: 200, headers });
+        }
+
+        else if (typeof body === "object" && typeof body !== "undefined" && body !== null) {
+            headers.set("Content-Type", "application/json");
+            return new Response(JSON.stringify(body), { status: 200, headers });
+        }
+
+        else throw new Error("empty response body");
     }
 
     protected async accept(listener: Deno.Listener): Promise<void> {
@@ -71,13 +102,13 @@ export class ServerService extends Service {
 
             try {
                 connection = await listener.accept();
-            } catch (error) {
+            } catch (exception) {
                 if (
-                    error instanceof Deno.errors.BadResource ||
-                    error instanceof Deno.errors.InvalidData ||
-                    error instanceof Deno.errors.UnexpectedEof ||
-                    error instanceof Deno.errors.ConnectionReset ||
-                    error instanceof Deno.errors.NotConnected
+                    exception instanceof Deno.errors.BadResource ||
+                    exception instanceof Deno.errors.InvalidData ||
+                    exception instanceof Deno.errors.UnexpectedEof ||
+                    exception instanceof Deno.errors.ConnectionReset ||
+                    exception instanceof Deno.errors.NotConnected
                 ) {
                     if (!acceptBackoffDelay) {
                         acceptBackoffDelay = this.__initialAcceptBackoffDelay;
@@ -94,7 +125,9 @@ export class ServerService extends Service {
                     continue;
                 }
 
-                throw error;
+                this.__handler.report(exception)
+
+                break;
             }
 
             acceptBackoffDelay = undefined;
@@ -103,7 +136,8 @@ export class ServerService extends Service {
 
             try {
                 httpConnection = Deno.serveHttp(connection);
-            } catch {
+            } catch(exception) {
+                this.__handler.report(exception);
                 continue;
             }
 
@@ -143,7 +177,8 @@ export class ServerService extends Service {
 
             try {
                 requestEvent = await httpConnection.nextRequest();
-            } catch {
+            } catch(exception) {
+                this.__handler.report(exception);
                 break;
             }
 
@@ -164,9 +199,11 @@ export class ServerService extends Service {
         try {
             request = requestEvent.request;
             response = await handle.getHandleRequest(request, connectionInfo);
-        } catch (error: unknown) {
+        } catch (exception: any) {
+            this.__handler.report(exception);
+
             request = requestEvent.request;
-            response = await handle.getHandleError(error, request);
+            response = await handle.getHandleRequest(request, connectionInfo);
         }
 
         try {
@@ -181,7 +218,8 @@ export class ServerService extends Service {
 
         try {
             listener.close();
-        } catch {
+        } catch (exception) {
+            console.error(exception);
             // Listener has already been closed.
         }
     }
@@ -191,7 +229,8 @@ export class ServerService extends Service {
 
         try {
             httpConnection.close();
-        } catch {
+        } catch (exception) {
+            console.error(exception);
             // Connection has already been closed
         }
     }

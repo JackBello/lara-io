@@ -1,11 +1,13 @@
-import HttpFile from './http-file.ts';
+// deno-lint-ignore-file no-inferrable-types
+import { HttpFile } from './http-file.ts';
 import { Fs } from '../../dependencies.ts';
+import { storage } from '../../helpers/miscellaneous.ts'
 
 const { moveSync } = Fs;
 
 export class HttpUploadedFile extends HttpFile{
     public constructor(content: Uint8Array | undefined, originalName: string, size: number, type: string, tmp: string | undefined, filename: string | undefined) {
-        super(content, originalName, size, type, tmp, filename);
+        super(content, originalName, size, type, tmp, filename, undefined);
     }
 
     public move (path: string, name?: string): void {
@@ -28,11 +30,15 @@ export class HttpUploadedFile extends HttpFile{
         if (content) Deno.writeFileSync(`${path}${name}`, content);
     }
 
-    // public store (path: string, disk: string = 'public'): void {
+    public store (path: string, disk: string = 'public'): void {
+        const content = this.getContent();
 
-    // }
+        if (content) storage().disk(disk).put(`${path}${this.originalName}`, content);
+    }
 
-    // public storeAs (path: string, name: string, disk: string = 'public'): void {
+    public storeAs (path: string, name: string, disk: string = 'public'): void {
+        const content = this.getContent();
 
-    // }
+        if (content) storage().disk(disk).put(`${path}${name}`, content);
+    }
 }

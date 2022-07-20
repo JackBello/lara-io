@@ -1,22 +1,22 @@
-export default class HttpFile {
+// deno-lint-ignore-file no-inferrable-types
+export class HttpFile {
     private __content: Uint8Array | undefined;
     private __originalName: string;
     private __filename: string | undefined;
     private __size: number;
     private __type: string;
     private __tmp: string | undefined;
+    private __directory: string | undefined;
+    private __root: string = "storage";
 
-    public constructor(content: Uint8Array | undefined, originalName: string, size: number, type: string, tmp: string | undefined, filename: string | undefined) {
+    public constructor(content: Uint8Array | undefined, originalName: string, size: number, type: string, tmp: string | undefined, filename: string | undefined, directory: string | undefined) {
         this.__content = content;
         this.__originalName = originalName;
         this.__filename = filename;
         this.__size = size;
         this.__type = type;
         this.__tmp = tmp;
-    }
-
-    public static fake() {
-
+        this.__directory = directory;
     }
 
     private getFileName() {
@@ -45,6 +45,22 @@ export default class HttpFile {
 
     private getMimeType() {
         return this.__type;
+    }
+
+    private getDirectory() {
+        if (this.__directory) return this.__directory.replace(`/${this.__root}/`,"");
+        else return undefined;
+    }
+
+    private getRoot() {
+        if (this.__directory) return this.__root;
+        else return undefined;
+    }
+
+    private getFullPath() {
+        if (this.__filename && this.__directory) {
+            return `${this.__directory}/${this.__filename}`;
+        }
     }
 
     public getContent(): Uint8Array {
@@ -78,5 +94,17 @@ export default class HttpFile {
 
     get mimeType(): string {
         return this.getMimeType();
+    }
+
+    get directory(): string | undefined {
+        return this.getDirectory();
+    }
+
+    get root(): string | undefined {
+        return this.getRoot();
+    }
+
+    get fullPath(): string | undefined {
+        return this.getFullPath();
     }
 }

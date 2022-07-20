@@ -5,10 +5,6 @@ import { IProviders, IServices, IConfigs } from '../@types/application.ts';
 
 import { Container } from '../container/container.ts';
 import { Fecade } from '../fecades/facade.ts';
-
-import { Reflection } from '../dependencies.ts';
-
-const { Reflect } = Reflection;
 export class Application {
     protected static _instance: Application;
 
@@ -135,45 +131,6 @@ export class Application {
         for (const name of this._providers) {
             await this.__container.make(name, {}).boot();
         }
-    }
-
-    public resolveDependencies(target: any, methodName: string) {
-        const paramsFunction = Reflect.getMetadata('design:paramtypes', target.prototype, methodName);
-
-        if (!paramsFunction) return [];
-
-        const paramsTypes = paramsFunction.map((type: any) => type.name)
-
-        const resolve:any = [];
-
-        const validateTypes: any = {
-            "String": true,
-            "Number": true,
-            "Array": true,
-            "Boolean": true,
-            "Object": true,
-            "Function": true,
-        };
-
-        let service;
-
-        for(const paramType of paramsTypes) {
-            if(!validateTypes[paramType]) {
-                if (paramType.indexOf("Service") !== -1) {
-                    service = this.service(paramType.replace("Service", "").toLowerCase());
-                } else {
-                    service = this.config(paramType.toLowerCase());
-                }
-
-                resolve.push(service);
-            }
-
-            if (validateTypes[paramType]) {
-                resolve.push(paramType);
-            }
-        }
-
-        return resolve;
     }
 
     public register(

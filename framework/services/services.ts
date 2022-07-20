@@ -1,5 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-import { Application } from '../fundation/application.ts';
+import { Application } from '../foundation/application.ts';
 
 /**
  * This is file of class service.
@@ -22,7 +22,7 @@ export class Service {
 
     /**
      * This class is used to register services in the application.
-     * 
+     *
      * @param name the name of the service
      * @param settings the settings of the service
      * @param app the application instance

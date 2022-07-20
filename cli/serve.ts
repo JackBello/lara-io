@@ -13,6 +13,7 @@ export default async function serve(path: string, flags: any) {
                 "run",
                 "-c",
                 `${path}\\tsconfig.json`,
+                "--unstable",
                 "--allow-read",
                 "--allow-write",
                 "--allow-net",

@@ -1,15 +1,18 @@
-// deno-lint-ignore-file no-inferrable-types
+// deno-lint-ignore-file no-inferrable-types no-explicit-any
 import { Service } from '../services.ts';
 
 import Route from './route.ts';
 
 import { template } from '../../helpers/miscellaneous.ts';
 
-import folderAtom from '../../fundation/templates/folder.atom.ts';
-
 import { serveFile } from "https://deno.land/std@0.141.0/http/file_server.ts";
 
 import { TRequest } from '../../@types/server.ts';
+
+import { PATH_FRAMEWORK } from '../../dependencies.ts';
+
+import RouteException from '../../foundation/exceptions/router/route.exception.ts';
+import RouterException from '../../foundation/exceptions/router/router.exception.ts';
 
 type TContent = {
     name: string;
@@ -42,7 +45,7 @@ export class RouterStaticsService extends Service {
     }
 
     public async getFolder(pathname: string) {
-        if (!this.__pathStatics) throw new Error("Static path not set");
+        if (!this.__pathStatics) throw new RouterException("Static path not set", "router/file");
 
         let dir: Iterable<Deno.DirEntry>, dirPath: string;
 
@@ -69,23 +72,41 @@ export class RouterStaticsService extends Service {
                 });
             }
         } catch {
-            throw new Error(`This url '${pathname}' no exist to router`);
+            throw new RouteException(`This url '${pathname}' no exist to router.`, "http/route/404");
         }
 
-        const html = await template().render(folderAtom(), information);
+        const hasViewFolder = template().exists("@templates/static/folder");
 
-        const handle = () => new Response(html, { headers: { "Content-Type": "text/html" }, status: 200 });
+        let view: any;
 
-        return new Route(pathname, undefined, handle);
+        if (hasViewFolder) {
+            view = await template().view("@templates/static/folder", information);
+        } else {
+            const html = await Deno.readTextFile(`${PATH_FRAMEWORK}foundation/templates/static/folder.atom`);
+
+            view = await template().render(html, information);
+        }
+
+        const handle = () => view instanceof Response ? view : new Response(view, { headers: { "Content-Type": "text/html" }, status: 200 });
+
+        return new Route(pathname, "GET", handle);
     }
 
-    public getFile(pathname: string)  {
-        if (!this.__pathStatics) throw new Error("Static path not set");
+    public async getFile(pathname: string)  {
+        if (!this.__pathStatics) throw new RouterException("Static path not set", "router/file");
 
         const filePath = `${this.__pathStatics}${pathname}`;
 
-        const handle = async () => await serveFile(this.__request, filePath);
+        let resp: Response;
 
-        return new Route(pathname, undefined, handle);
+        try {
+            resp = await serveFile(this.__request, filePath);
+        } catch (error) {
+            throw new RouteException(`This url '${pathname}' no exist to router.`, "http/route/404", error);
+        }
+
+        const handle = () => resp;
+
+        return new Route(pathname, "GET", handle);
     }
 }

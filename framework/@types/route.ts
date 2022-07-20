@@ -59,6 +59,8 @@ export type TCallbackRoute = (context: TRouteContext, ...params: any) => any;
 
 export type TCallbackMiddleware = (context: TRouteContext, next: () => any) => any;
 
+export type TClassMiddleware = { new(...args: any[]): any; };
+
 export type TAction = string | any[] | TCallbackRoute;
 
-export type TMiddleware = string | any[] | TCallbackMiddleware | TCallbackMiddleware[];
+export type TMiddleware = string | any[] | TCallbackMiddleware | TCallbackMiddleware[] | TClassMiddleware | TClassMiddleware[];

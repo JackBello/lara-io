@@ -11,7 +11,9 @@ import { css, script } from '../../helpers/urls.ts';
 
 import defaultContent from './default-content.ts';
 
+import { HandlerException } from '../../foundation/exceptions/handler-exceptions.ts';
 export class TemplateEngineService extends Service {
+    protected __handler: HandlerException = this.app.make("@handler", {});
     protected __pathViews?: string;
     protected __engine = "atom";
     protected __engines: Map<string, any> = new Map();
@@ -50,70 +52,129 @@ export class TemplateEngineService extends Service {
     }
 
     public async render(html: string, data: any): Promise<any> {
-        this.context = data;
+        try {
+            this.context = data;
 
-        const compiled = await this.engine.compile(html)(this.context, this.fecaces, this.helpers, this.global, this.shared);
+            const compiled = await this.engine.compile(html)(this.context, this.fecaces, this.helpers, this.global, this.shared);
 
-        this.context = {}
+            this.context = {}
 
-        return compiled;
+            return compiled;
+        } catch (exception) {
+            console.log(exception);
+
+            this.__handler.report(exception);
+        }
     }
 
     public async view(view: string, data: any = {}): Promise<any> {
-        const html = new TextDecoder().decode(Deno.readFileSync(`${this.__pathViews}${view}.${this.__engine}`));
+        try {
+            const html = new TextDecoder().decode(Deno.readFileSync(`${this.__pathViews}${view}.${this.__engine}`));
 
-        const result = await this.render(html, data);
+            const result = await this.render(html, data);
 
-        return new Response(result, { headers: { "Content-Type": "text/html" }, status: 200 });
+            return new Response(result, { headers: { "Content-Type": "text/html" }, status: 200 });
+        } catch (exception) {
+            this.__handler.report(exception);
+        }
+    }
+
+    public getView(view: string) {
+        try {
+            return new TextDecoder().decode(Deno.readFileSync(`${this.__pathViews}${view}.${this.__engine}`));
+        } catch(exception) {
+            this.__handler.report(exception);
+        }
     }
 
     public exists(view: string): boolean {
-        return Deno.statSync(`${this.__pathViews}${view}.${this.__engine}`).isFile;
+        try {
+            Deno.statSync(`${this.__pathViews}${view}.${this.__engine}`);
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     public async create(name: string, content?: string, data?: any): Promise<any> {
-        if (content) {
-            Deno.writeTextFileSync(`${this.__pathViews}${name}.${this.__engine}`, content);
-        } else {
-            Deno.writeTextFileSync(`${this.__pathViews}${name}.${this.__engine}`, defaultContent);
-        }
+        try {
+            if (content) {
+                Deno.writeTextFileSync(`${this.__pathViews}${name}.${this.__engine}`, content);
+            } else {
+                Deno.writeTextFileSync(`${this.__pathViews}${name}.${this.__engine}`, defaultContent);
+            }
 
-        if (data) {
-            return await this.view(name, data);
+            if (data) {
+                return await this.view(name, data);
+            }
+        } catch (exception) {
+            this.__handler.report(exception);
         }
     }
 
     public share(values: any): void {
-        this.shared = this.engine.share(values);
+        try {
+            this.shared = this.engine.share(values);
+        } catch (exception) {
+            this.__handler.report(exception);
+        }
     }
 
     public preloadData(data: any): void {
-        for (const key in data) {
-            this.context[key] = data[key];
+        try {
+            for (const key in data) {
+                this.context[key] = data[key];
+            }
+        } catch (exception) {
+            this.__handler.report(exception);
         }
     }
 
     public registerHelper(name: string, helper: any): void {
-        this.helpers[name] = helper;
+        try {
+            this.helpers[name] = helper;
+        } catch (exception) {
+            this.__handler.report(exception);
+        }
     }
 
     public registerFecace(name: string, fecace: any): void {
-        this.fecaces[name] = fecace;
+        try {
+            this.fecaces[name] = fecace;
+        } catch (exception) {
+            this.__handler.report(exception);
+        }
     }
 
     public registerGlobal(name: string, value: any): void {
-        this.global[name] = value;
+        try {
+            this.global[name] = value;
+        } catch (exception) {
+            this.__handler.report(exception);
+        }
     }
 
     public registerEngine(name: string, engine: any): void {
-        this.__engines.set(name, engine);
+        try {
+            this.__engines.set(name, engine);
+        } catch (exception) {
+            this.__handler.report(exception);
+        }
     }
 
     public setEngine(engine: string): void {
-        this.__engine = engine;
+        try {
+            this.__engine = engine;
+        } catch (exception) {
+            this.__handler.report(exception);
+        }
     }
 
     public setPathViews(path: string): void {
-        this.__pathViews = `${path}/views/`;
+        try {
+            this.__pathViews = `${path}/views/`;
+        } catch (exception) {
+            this.__handler.report(exception);
+        }
     }
 }

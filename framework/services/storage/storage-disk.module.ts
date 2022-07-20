@@ -1,5 +1,5 @@
 import { IDisks, IDisk } from "../../@types/storage.ts";
-import { Application } from "../../fundation/application.ts";
+import { Application } from "../../foundation/application.ts";
 
 export class StorageDiskModule {
   protected app: Application;

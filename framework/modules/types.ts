@@ -1,14 +1,17 @@
 // deno-lint-ignore-file no-explicit-any
 import { IRouterFile, IRouteConfig, IHistoryRoute, IRoute, TAction, TMiddleware } from '../@types/route.ts';
-import { TUploadedFile, TRequestServer } from '../@types/request.ts';
+import { TRequestServer } from '../@types/request.ts';
 import { IAppPaths, IPath, IProviders, IServices, IConfigs } from '../@types/application.ts';
 import { TMethodHTTP, TAllMethodHTTP } from '../@types/server.ts';
 import { IInfoFile, IDisks, ILinks } from "../@types/storage.ts"
-
+import { HttpFile } from '../foundation/http/http-file.ts';
+import { HttpUploadedFile } from '../foundation/http/http-uploaded-file.ts';
 export type TRouteContext = {
     [index: string]: any;
-    request: THttpRequest;
-    history: THistory;
+    request(): THttpRequest;
+    response(content?: any, status?: number, headers?: Record<string, string>): Omit<THttpResponse, "setBody" | "setStatus" | "make">;
+    history(): THistory;
+    storage(): TStorage;
     view(view: string, data?: any): Promise<string>,
     config(name: string): void;
     service(name: string): void;
@@ -45,12 +48,13 @@ export type THttpRequest = {
     params: Record<string, string>;
     route: IRoute;
     body: any;
-    files: Record<string, TUploadedFile>;
+    files: Record<string, HttpUploadedFile>;
     cookies: any;
     server?: TRequestServer;
     session?: any;
     user?: any;
     method: TAllMethodHTTP;
+    protocol: string;
     ip: string;
     baseUrl: string;
     baseUri: string;
@@ -58,7 +62,19 @@ export type THttpRequest = {
 }
 
 export type THttpResponse = {
-
+    setBody(body: any): void;
+    setStatus(status: number): void;
+    cookie(name: string, value: string): void;
+    header(name: string, value: string): void;
+    headers(headers: Record<string, string>): void;
+    make(content?: any, status?: number, headers?: Record<string, string>): Response;
+    json(content: any, optionals?: any, status?: number, headers?: Record<string, string>): Response;
+    xml(content: any, status?: number, headers?: Record<string, string>): Response;
+    yaml(content: any, status?: number, headers?: Record<string, string>): Response;
+    view(name: string, data?: any, status?: number, headers?: Record<string, string>): Promise<Response>;
+    file(file: string | HttpFile): Promise<Response>
+    download(file: string | HttpFile, name?: string, headers?: Record<string, string>): Response;
+    redirect(url: string, status?: number): Response;
 }
 
 export type THistory = {
@@ -92,6 +108,7 @@ export type TRouter = {
     permanentRedirect: (uri: string, destination: string) => any;
 
     view: (uri: string, view: string, data?: any) => Promise<void>;
+    proxy: (uri: string, url: string, port: number, methods?: TMethodHTTP[] | TMethodHTTP ) => Promise<any>
 }
 
 export type TStorage = {
@@ -99,8 +116,8 @@ export type TStorage = {
     missing: (path: string) => boolean;
     get: (path: string) => string;
     put: (path: string, contents: Uint8Array) => boolean;
-    putFile: (path: string, contents: TUploadedFile) => string
-    putFileAs: (path: string, contents: TUploadedFile, name: string) => string
+    putFile: (path: string, contents: HttpUploadedFile) => string
+    putFileAs: (path: string, contents: HttpUploadedFile, name: string) => string
     delete: (path: string | Array<string>) => boolean
     path: (path: string) => string;
     url: (path: string) => string;
@@ -121,13 +138,13 @@ export type TStorage = {
 }
 
 export type TTemplate = {
-    render(html: string, data?: any): Promise<string>,
-    view(view: string, data?: any): Promise<string>,
-    share(values: any): void,
-    registerEngine(name: string, engine: any): void,
-    registerHelper(name: string, helper: any): void,
-    registerFecace(name: string, fecace: any): void,
-    registerGlobal(name: string, value: any): void,
+    getView(view: string): string;
+    render(html: string, data?: any): Promise<string>;
+    view(view: string, data?: any): Promise<any>;
+    share(values: any): void;
+    exists(view: string): boolean;
+    create(name: string, content?: string, data?: any): Promise<any>;
+    preloadData(data: any): void;
 }
 
 export type ApplicationConfig = {

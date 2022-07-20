@@ -1,9 +1,9 @@
 // deno-lint-ignore-file
-
+import AtomException from '../../foundation/exceptions/template/atom.exception.ts'
 export class EngineAtom {
-    private regExpCodeJS = /({{(.*?)}}|{{--(.*?)--}}|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g;
+    private regExpCodeJS = /({{(.*?)}}|{{--(.*?)--}}|\@include\((.*?)\)|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g;
     private regExpDirectives = /\@(.*?)\((.*?)\)/g;
-    private code = "const result = [];\n";
+    private code = "const result = []; ";
     private isJS = false;
     private isDoWhile = false;
     private matchHelpers = /(app|service|config|history|request|appPath|configPath|databasePath|ecosystemPath|publicPath|resourcePath|routerPath|storagePath|^css|^script)/g;
@@ -15,10 +15,16 @@ export class EngineAtom {
     public share(object: any) {
         for (const key in object) {
             if (object.hasOwnProperty(key)) {
-                this.code = this.code + `const ${key} = ${this.parseVariables(object[key])};\n`;
+                this.code = this.code + `const ${key} = ${this.parseVariables(object[key])}; `;
             }
         }
     }
+
+    // protected include(view:string) {
+    //     const html = new TextDecoder().decode(Deno.readFileSync(`${this.__pathViews}${view}.atom`));
+
+    //     const result = await this.render(html, data);
+    // }
 
     protected parseVariables(vars: any) {
         if (typeof vars === "string") {
@@ -130,7 +136,7 @@ export class EngineAtom {
 
                 if (line.match(/\@endcode/g)) this.isJS = false;
             } else {
-                this.code += 'result.push(`' + line + '`);\n';
+                this.code += 'result.push(`' + line + '`); ';
             }
         }
     }
@@ -159,15 +165,19 @@ export class EngineAtom {
     }
 
     public compile(template: string): Promise<any> {
-        this.parser(template);
+        try {
+            this.parser(template);
 
-        const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+            const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
 
-        const exec = new AsyncFunction(`context`, `fecades`, `helpers`, `global`, `shared`, this.code);
+            const exec = new AsyncFunction(`context`, `fecades`, `helpers`, `global`, `shared`, this.code);
 
-        this.code = "const result = [];\n";
+            this.code = "const result = []; ";
 
-        return exec;
+            return exec;
+        } catch(exception) {
+            throw new AtomException("Error compile atom file", "atom/compile", exception);
+        }
     }
 }
 
@@ -181,17 +191,19 @@ export class EngineAtom {
 @endwith;
 @do;
 
-@function(name, params)
-
-@endfunction;
-
 @excapehtml()
 @includes()
 @extends()
 @component()
-@auth()
-@env()
+@auth() @endauth
+@guest() @endguest
+@env() @endenv
+@production @endproduction
 @csrf()
 @session()
 @route()
+
+/EXPERIMENTAL
+@function(name, params)
+@endfunction;
 */

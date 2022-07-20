@@ -24,10 +24,10 @@ export class StorageService extends Service {
      * Initialize the storage service.
      */
     public initStorage(): void {
-        const configStorage = this.app.config("storage");
+        // const configStorage = this.app.config("storage");
 
-        const symLinks = configStorage.links;
-        this.createSymLink(symLinks);
+        // const symLinks = configStorage.links;
+        // this.createSymLink(symLinks);
 
         this.device = this.__disks.disk();
     }

@@ -1,0 +1,12 @@
+{
+    "imports": {
+        "@lara-id": "file:///F:/Escritorio/lara-io/framework/modules/types.ts",
+        "@lara-io/types": "file:///F:/Escritorio/lara-io/framework/modules/types.ts",
+        "@lara-io/core": "file:///F:/Escritorio/lara-io/framework/modules/core.ts",
+        "@lara-io/configs": "file:///F:/Escritorio/lara-io/framework/modules/configs.ts",
+        "@lara-io/helpers": "file:///F:/Escritorio/lara-io/framework/modules/helpers.ts",
+        "@lara-io/fecades": "file:///F:/Escritorio/lara-io/framework/modules/fecades.ts",
+        "@lara-io/services": "file:///F:/Escritorio/lara-io/framework/modules/services.ts",
+        "@lara-io/providers": "file:///F:/Escritorio/lara-io/framework/modules/providers.ts"
+    }
+}

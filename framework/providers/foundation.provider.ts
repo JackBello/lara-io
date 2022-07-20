@@ -2,14 +2,15 @@ import { Provider } from './provider.ts';
 
 import { IConnectionInfo } from '../@types/server.ts';
 
-import { RouteContext } from '../fundation/router/route-context.ts';
+import { RouteContext } from '../foundation/router/route-context.ts';
 
 import { TemplateEngineService } from '../services/template/template-engine.service.ts';
 import { EngineAtom } from '../services/template/atom.engine.ts';
 
-import { HttpRequest } from '../fundation/http/request/http-request.ts';
+import { HttpProxy } from '../foundation/http/http-proxy.ts';
+import { HttpRequest } from '../foundation/http/http-request.ts';
+import { HttpResponse } from '../foundation/http/http-response.ts';
 
-import { RouterMiddlewareService } from '../services/router/router-middleware.service.ts';
 import { RouterStaticsService } from '../services/router/router-statics.service.ts'
 import { RouterHistoryService } from '../services/router/router-history.service.ts';
 import { RouterService } from '../services/router/router.service.ts';
@@ -18,11 +19,11 @@ import { ServerHandleService } from '../services/server/server-handle.service.ts
 
 import { ServerService } from '../services/server/server.service.ts';
 
-import { view, service, config } from '../helpers/miscellaneous.ts'
+import { view, service, config, request, response, storage, history } from '../helpers/miscellaneous.ts'
 
 import { StorageService } from '../services/storage/storage.service.ts';
 
-export class FundationProvider extends Provider{
+export class foundationProvider extends Provider{
     register() {
         this.app.registerService("template/engine", TemplateEngineService, {
             isSingleton: true,
@@ -36,13 +37,19 @@ export class FundationProvider extends Provider{
             configService: {}
         });
 
+        this.app.register("http/proxy", HttpProxy, {
+            isSingleton: true,
+            isCallback: true,
+            configService: {}
+        });
+
         this.app.register("http/request", HttpRequest, {
             isSingleton: true,
             isCallback: true,
             configService: {}
         });
 
-        this.app.registerService("router/middleware", RouterMiddlewareService, {
+        this.app.register("http/response", HttpResponse, {
             isSingleton: true,
             isCallback: true,
             configService: {}
@@ -92,19 +99,26 @@ export class FundationProvider extends Provider{
     }
 
     boot() {
+        const $handler = this.app.make("@handler", {});
+        const $kernel = this.app.make("@kernel", {});
+
+        const $httpProxy = this.app.use('http/proxy');
         const $httpRequest = this.app.use('http/request');
+        const $httpResponse = this.app.use('http/response');
 
         const $routeContext = this.app.use("route/context");
 
+        const $server = this.app.service("server");
         const $serverHandle = this.app.service('server/handle');
 
         const $router = this.app.service('router');
-        const $routerMiddleware = this.app.service('router/middleware');
         const $routerHistory = this.app.service('router/history');
         const $routerStatics = this.app.service('router/statics');
 
         const $templateEngine = this.app.service('template/engine');
         const $engineAtom = this.app.use("engine/atom");
+
+        const { isDebug } = this.app.config("app");
 
         const { statics, resources } = this.app.config("paths");
 
@@ -113,6 +127,8 @@ export class FundationProvider extends Provider{
         const { hostname } = this.app.config("server");
 
         const $storage = this.app.service('storage');
+
+        $handler.setDebug(isDebug);
 
         $templateEngine.setPathViews(resources);
 
@@ -128,7 +144,7 @@ export class FundationProvider extends Provider{
 
         $router.setPathController(http);
 
-        $router.setPathMiddleware(http);
+        $router.useProxy($httpProxy);
 
         $router.useTemplate($templateEngine);
 
@@ -136,27 +152,61 @@ export class FundationProvider extends Provider{
 
         $router.useFileStatic($routerStatics);
 
-        $router.useMiddleware($routerMiddleware);
-
-        $routeContext.inject("request", $httpRequest);
-        $routeContext.inject("history", $routerHistory);
+        $routeContext.inject("request", request);
+        $routeContext.inject("response", response);
+        $routeContext.inject("history", history);
+        $routeContext.inject("storage", storage);
         $routeContext.inject("view", view);
         $routeContext.inject("config", config);
         $routeContext.inject("service", service);
+        $routeContext.inject("proxy", $httpProxy.request);
 
         $storage.initStorage();
 
         $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {
+            $kernel.mergeMiddlewares();
+
+            $httpResponse.clearResponse();
+            $httpResponse.setRequest(request);
+
             $httpRequest.setRequest(request);
             $httpRequest.setConnection(connection);
 
             $routerStatics.setRequest(request);
-
             $routerHistory.setUrl(request.url);
-
             $router.setRequest(request);
 
-            return await $router.lookPetitions();
+            if (!$handler.existsReport()) await $router.lookPetitions();
+
+            let actionResponse, serveResponse;
+
+            $kernel.setContext($routeContext.getContext());
+
+            if ($kernel.existsMiddlewares()) {
+                await $kernel.run();
+
+                actionResponse = $kernel.excuting ? $kernel.result : $router.result;
+            } else {
+                actionResponse = $router.result;
+            }
+
+            if (!$handler.existsReport()) serveResponse = $server.serveResponse(actionResponse, $httpResponse.getHeaders());
+
+            if ($handler.existsReport()) {
+                const exception = $handler.getReport();
+
+                $handler.console(exception);
+
+                if (exception.type) {
+                    if (exception.type.indexOf("http") !== -1) $handler.clearReports();
+                }
+
+                return await $handler.render(exception);
+            }
+
+            $kernel.clearMiddlewares();
+
+            return serveResponse;
         });
     }
 }
