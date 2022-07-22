@@ -23,7 +23,7 @@ import { view, service, config, request, response, storage, history } from '../h
 
 import { StorageService } from '../services/storage/storage.service.ts';
 
-export class foundationProvider extends Provider{
+export class FoundationProvider extends Provider{
     register() {
         this.app.registerService("template/engine", TemplateEngineService, {
             isSingleton: true,

@@ -1,7 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { Table } from "https://deno.land/x/tbl@1.0.3/mod.ts";
 
-import { Application } from "../framework/fundation/application.ts";
+import { Application } from "../framework/foundation/application.ts";
 import { RouterService } from "../framework/services/router/router.service.ts";
 
 export default async function route(path: string, flags: any) {

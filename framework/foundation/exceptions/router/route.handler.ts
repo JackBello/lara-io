@@ -16,7 +16,7 @@ export default async function RouteHandler(message: string, status: number) {
 
         view = await template().render(html, {message, status, text});
     } else {
-        html = await Deno.readTextFile(`${PATH_FRAMEWORK}/fundation/templates/error/index.atom`);
+        html = await Deno.readTextFile(`${PATH_FRAMEWORK}/foundation/templates/error/index.atom`);
 
         view = await template().render(html, {message, status, text});
     }
