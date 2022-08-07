@@ -73,7 +73,9 @@ export class HandlerException {
         if (this.__debug) {
             console.log(PATH_FRAMEWORK);
 
-            const html = await Deno.readTextFile(`${PATH_FRAMEWORK}/foundation/templates/debug/index.atom`);
+            console.log(Deno.readDirSync("../"));
+
+            const html = await Deno.readTextFile(`${PATH_FRAMEWORK}foundation/templates/debug/index.atom`);
 
             const view = await template().render(html, {
                 name,
