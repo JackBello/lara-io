@@ -4,6 +4,8 @@ import { Path, IO, PATH_FRAMEWORK } from '../../dependencies.ts';
 import RouteHandler from './router/route.handler.ts';
 import { template } from '../../helpers/miscellaneous.ts';
 
+import { readerFromStreamReader } from "https://deno.land/std@0.151.0/streams/mod.ts";
+
 const { basename, dirname } = Path;
 const { readLines } = IO;
 
@@ -92,6 +94,17 @@ export class HandlerException {
         // }), { headers: { "Content-Type": "application/json" } });
     }
 
+    protected async openFile(path: string) {
+        if (path.startsWith("file:///")) {
+            return await Deno.open(path);
+        } else {
+            const request = await fetch(path);
+            const streamReader = readerFromStreamReader(request.body!.getReader());
+
+            return streamReader;
+        }
+    }
+
     protected async prepareCode(stacks: any[]) {
         const codes: any[] = [];
 
@@ -101,7 +114,8 @@ export class HandlerException {
             const indexPrev = lineError - 60;
             const indexNext = lineError + 60;
 
-            const fileReader = await Deno.open(stack.info.path.system);
+            const fileReader = await this.openFile(stack.info.path.system);
+
             const lines = readLines(fileReader);
 
             let index = 1;
