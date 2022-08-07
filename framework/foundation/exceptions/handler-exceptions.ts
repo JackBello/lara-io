@@ -96,6 +96,8 @@ export class HandlerException {
     }
 
     protected async openFile(path: string) {
+        console.log(path);
+
         if (validateUrl(path)) {
             const request = await fetch(path);
             const streamReader = readerFromStreamReader(request.body!.getReader());
