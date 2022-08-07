@@ -181,7 +181,7 @@ export class HandlerException {
             }
 
             const sync = parts[0] === "async" ? true : false;
-            const file = parts[parts.length - 1].startsWith("file:///") ? parts[parts.length - 1] : undefined;
+            const file = parts[parts.length - 1].startsWith("file:///") || parts[parts.length - 1].startsWith("https://") ? parts[parts.length - 1] : undefined;
             const indexNumberLine = file?.search(/:[0-9]+:[0-9]+/g);
 
             const errorLineAndColumnCode = file?.slice(indexNumberLine)?.slice(1)?.split(":");
