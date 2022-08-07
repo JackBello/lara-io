@@ -23,7 +23,7 @@ export class HandlerException {
         if (!this.__debug) {
             const { name, message, stack } = exception;
 
-            const stacks: any[] = this.prepareStack(stack);
+            // const stacks: any[] = this.prepareStack(stack);
 
             console.error(`[${name}] ${message}`);
             console.log(stack);
