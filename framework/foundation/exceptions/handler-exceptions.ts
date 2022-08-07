@@ -98,6 +98,7 @@ export class HandlerException {
         if (path.startsWith("file:///")) {
             return await Deno.open(path);
         } else {
+            console.log(path);
             const request = await fetch(path);
             const streamReader = readerFromStreamReader(request.body!.getReader());
 
