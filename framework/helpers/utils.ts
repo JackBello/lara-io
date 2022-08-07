@@ -1,13 +1,17 @@
 // deno-lint-ignore-file no-explicit-any
-import { config } from "https://raw.githubusercontent.com/daychongyang/dotenv/master/mod.ts";
+import "https://deno.land/std@0.151.0/dotenv/load.ts";
 
 import { Path } from '../dependencies.ts';
 
 import RouteException from '../foundation/exceptions/router/route.exception.ts';
 
-config({ debug: false })
+// config({ debug: false })
 
 const { dirname } = Path;
+
+export function validateUrl (value: string) {
+    return /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(value);
+}
 
 export function formatter(value: any) {
     if (value.startsWith("[") && value.endsWith("]")) {
