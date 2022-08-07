@@ -1,6 +1,6 @@
 import { NIL_UUID, V4, isNil, isValid, uuid } from "https://deno.land/x/uuid@v0.1.2/mod.ts";
 import { delay } from "https://deno.land/std@0.129.0/async/mod.ts";
-import { fromFileUrl, dirname, resolve, toFileUrl, join, extname, basename, parse as ParsePath } from "https://deno.land/std@0.110.0/path/mod.ts";
+import { fromFileUrl, dirname, resolve, toFileUrl, join, extname, basename, parse as ParsePath } from "https://deno.land/std@0.151.0/path/mod.ts";
 import { readerFromStreamReader, writerFromStreamWriter, readableStreamFromReader, writableStreamFromWriter, copy } from "https://deno.land/std@0.134.0/streams/mod.ts";
 import { parse, stringify } from "https://deno.land/x/xml@2.0.4/mod.ts";
 import { move, moveSync, ensureSymlinkSync, ensureDirSync } from "https://deno.land/std@0.140.0/fs/mod.ts";
