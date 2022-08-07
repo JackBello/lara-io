@@ -5,6 +5,7 @@ import RouteHandler from './router/route.handler.ts';
 import { template } from '../../helpers/miscellaneous.ts';
 
 import { readerFromStreamReader } from "https://deno.land/std@0.151.0/streams/mod.ts";
+import { validateUrl } from '../../helpers/utils.ts';
 
 const { basename, dirname } = Path;
 const { readLines } = IO;
@@ -95,15 +96,13 @@ export class HandlerException {
     }
 
     protected async openFile(path: string) {
-        path = "file:///"+path;
-
-        if (path.startsWith("file:///")) {
-            return await Deno.open(path);
-        } else {
+        if (validateUrl(path)) {
             const request = await fetch(path);
             const streamReader = readerFromStreamReader(request.body!.getReader());
 
             return streamReader;
+        } else {
+            return await Deno.open(path);
         }
     }
 
