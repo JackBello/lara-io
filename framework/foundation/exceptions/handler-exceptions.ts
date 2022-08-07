@@ -60,8 +60,9 @@ export class HandlerException {
     protected async prepareException(exception: any) {
         const { name, message, stack, type, extra } = exception;
 
-        const stacks: any[] = this.prepareStack(stack) //; this.prapereStackEval(stack, this.prepareStack(stack));
+        const stacks: any[] = this.prepareStack(stack)
         const types: string[] = type ? type.split("/") : [];
+        console.log(stacks);
         const codes: any[] = await this.prepareCode(stacks);
 
         if (types.includes("route") && types.includes("http")) {
