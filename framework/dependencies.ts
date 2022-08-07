@@ -121,5 +121,3 @@ export const IO = {
 }
 
 export const PATH_FRAMEWORK = `${import.meta.url.slice(0, import.meta.url.indexOf("/framework/")).replace("file:///","")}/framework/`;
-
-console.log(import.meta.url);

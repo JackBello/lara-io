@@ -62,7 +62,6 @@ export class HandlerException {
 
         const stacks: any[] = this.prepareStack(stack)
         const types: string[] = type ? type.split("/") : [];
-        console.log(stacks);
         const codes: any[] = await this.prepareCode(stacks);
 
         if (types.includes("route") && types.includes("http")) {
@@ -99,8 +98,6 @@ export class HandlerException {
     }
 
     protected async openFile(path: string) {
-        console.log(path);
-
         if (validateUrl(path)) {
             const request = await fetch(path);
             const streamReader = readerFromStreamReader(request.body!.getReader());
