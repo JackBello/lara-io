@@ -513,14 +513,14 @@ export class RouterService extends Service {
         try {
             if (!this.__template) throw new RouteException("template must be given", "route/view/parameter");
 
-            const selfView = this.__template.view;
+            const selfTemplate = this.__template;
 
             this.registerRoute({
                 uri,
                 name: view,
                 method: "GET",
             }, async () => {
-                return await selfView(view, data);
+                return await selfTemplate.view(view, data);
             });
         } catch (exception) {
             this.__handler.report(exception);
