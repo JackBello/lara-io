@@ -19,8 +19,8 @@ export default async function serve(path: string, flags: any) {
                 "--allow-net",
                 "--allow-env",
                 "--import-map",
-                `${path}\\imports.json`,
-                `${path}\\boot\\index.ts`,
+                `${path}\\import_map.json`,
+                `${path}\\main.ts`,
             ],
         });
 
