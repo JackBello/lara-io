@@ -1,16 +1,15 @@
 // deno-lint-ignore-file no-explicit-any no-inferrable-types
-import { Path, IO } from '../../dependencies.ts';
+import { Path, IO, Streams } from '../../dependencies.ts';
 
 import RouteHandler from './router/route.handler.ts';
 import { template } from '../../helpers/miscellaneous.ts';
 
-import { readerFromStreamReader } from "https://deno.land/std@0.151.0/streams/mod.ts";
 import { validateUrl } from '../../helpers/utils.ts';
 import ErrorDebugPage from '../templates/debug/index.ts';
 
 const { basename, dirname } = Path;
 const { readLines } = IO;
-
+const { readerFromStreamReader } = Streams;
 export class HandlerException {
     protected __debug: boolean = false;
     protected __reports: any = [];
@@ -61,15 +60,16 @@ export class HandlerException {
     protected async prepareException(exception: any) {
         const { name, message, stack, type, extra } = exception;
 
-        const stacks: any[] = this.prepareStack(stack)
         const types: string[] = type ? type.split("/") : [];
-        const codes: any[] = await this.prepareCode(stacks);
 
         if (types.includes("route") && types.includes("http")) {
             const status = parseInt(types[2]);
 
             return await RouteHandler(message, status);
         }
+
+        const stacks: any[] = this.prepareStack(stack)
+        const codes: any[] = await this.prepareCode(stacks);
 
         if (this.__debug) {
             const html = ErrorDebugPage;
@@ -113,8 +113,8 @@ export class HandlerException {
         for (const stack of stacks) {
             const lineCode = [];
             const lineError = Number(stack.code.error[0]);
-            const indexPrev = lineError - 60;
-            const indexNext = lineError + 60;
+            const indexPrev = lineError - 40;
+            const indexNext = lineError + 40;
 
             const fileReader = await this.openFile(stack.info.path.system);
 
