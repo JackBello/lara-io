@@ -27,7 +27,7 @@ const TEMPLATE: string = `
             <div class="mb-4 flex justify-between items-center">
                 <span class="bg-slate-200 text-white py-1 px-3 text-slate-700 box-border block font-bold">{{ $name }}</span>
                 <div>
-                    <b class="bg-slate-200 text-white py-1 px-3 text-slate-700 box-border font-bold mx-1">Deno {{ Deno.version.deno }}</b>
+                    <b class="bg-slate-200 text-white py-1 px-3 text-slate-700 box-border font-bold mx-1">Deno {{ Deno.version?.deno }}</b>
                     <b class="bg-slate-200 text-white py-1 px-3 text-slate-700 box-border font-bold mx-1">LaraIO {{ 0.1 }}</b>
                 </div>
             </div>
