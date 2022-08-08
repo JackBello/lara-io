@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-inferrable-types
+const TEMPLATE: string = `
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -50,3 +52,6 @@
         </div>
     </body>
 </html>
+`;
+
+export default TEMPLATE;

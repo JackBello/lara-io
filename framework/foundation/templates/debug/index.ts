@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-inferrable-types
+const TEMPLATE: string = `
 <!DOCTYPE html>
 <html lang="en">
 
@@ -47,7 +49,7 @@
                 @for(const stack of $stacks)
                     <li>
                         <a href="#" class="border-b-2 files-error box-border flex flex-col py-3 px-5 bg-slate-100 {{ index === 0 ? 'bg-red-400 hover:bg-red-500 text-white' : 'hover:bg-slate-300' }}" data-selected="{{ index === 0 ? true : false }}" data-index="{{ index }}" data-line="{{ stack.code.error ? stack.code.error[0] : 1 }}">
-                            <span>{{ stack.info.path.system }}{{ stack.code.error ? ` : ${stack.code.error[0]}` : undefined }}</span>
+                            <span>{{ stack.info.path.system }}{{ stack.code.error ? " : " + stack.code.error[0] : undefined }}</span>
                             <b>
                                 {{ stack.code.execute.action }}
                             </b>
@@ -166,3 +168,6 @@
 </body>
 
 </html>
+`;
+
+export default TEMPLATE;

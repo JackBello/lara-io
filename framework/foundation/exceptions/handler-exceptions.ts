@@ -1,11 +1,12 @@
 // deno-lint-ignore-file no-explicit-any no-inferrable-types
-import { Path, IO, PATH_FRAMEWORK } from '../../dependencies.ts';
+import { Path, IO } from '../../dependencies.ts';
 
 import RouteHandler from './router/route.handler.ts';
 import { template } from '../../helpers/miscellaneous.ts';
 
 import { readerFromStreamReader } from "https://deno.land/std@0.151.0/streams/mod.ts";
 import { validateUrl } from '../../helpers/utils.ts';
+import ErrorDebugPage from '../templates/debug/index.ts';
 
 const { basename, dirname } = Path;
 const { readLines } = IO;
@@ -71,13 +72,7 @@ export class HandlerException {
         }
 
         if (this.__debug) {
-            console.log(PATH_FRAMEWORK);
-
-            for (const dirEntry of Deno.readDirSync("/")) {
-                console.log(dirEntry.name);
-            }
-
-            const html = await Deno.readTextFile(`${PATH_FRAMEWORK}foundation/templates/debug/index.atom`);
+            const html = ErrorDebugPage;
 
             const view = await template().render(html, {
                 name,

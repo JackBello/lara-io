@@ -1,22 +1,18 @@
-import { PATH_FRAMEWORK } from '../../../dependencies.ts';
-
 import { template } from '../../../helpers/miscellaneous.ts';
-import { resourcePath } from '../../../helpers/paths.ts';
 import { StatusText } from '../../http/http-status.ts';
+import ErrorHttpPage from '../../templates/error/index.ts';
 
 export default async function RouteHandler(message: string, status: number) {
     const hasView = template().exists(`@templates/error/index`);
 
-    let view: string, html: string;
+    let view: string;
 
     const text = StatusText[status];
 
     if (hasView) {
-        html = await Deno.readTextFile(resourcePath(`@templates/error/index.atom`));
-
-        view = await template().render(html, {message, status, text});
+        view = await template().view("@templates/error/index", {message, status, text});
     } else {
-        html = await Deno.readTextFile(`${PATH_FRAMEWORK}/foundation/templates/error/index.atom`);
+        const html = ErrorHttpPage;
 
         view = await template().render(html, {message, status, text});
     }

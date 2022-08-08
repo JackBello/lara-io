@@ -9,10 +9,10 @@ import { serveFile } from "https://deno.land/std@0.141.0/http/file_server.ts";
 
 import { TRequest } from '../../@types/server.ts';
 
-import { PATH_FRAMEWORK } from '../../dependencies.ts';
-
 import RouteException from '../../foundation/exceptions/router/route.exception.ts';
 import RouterException from '../../foundation/exceptions/router/router.exception.ts';
+
+import StaticFolderPage from "../../foundation/templates/static/folder.ts";
 
 type TContent = {
     name: string;
@@ -82,7 +82,7 @@ export class RouterStaticsService extends Service {
         if (hasViewFolder) {
             view = await template().view("@templates/static/folder", information);
         } else {
-            const html = await Deno.readTextFile(`${PATH_FRAMEWORK}foundation/templates/static/folder.atom`);
+            const html = StaticFolderPage;
 
             view = await template().render(html, information);
         }

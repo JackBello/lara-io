@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-inferrable-types
+const TEMPLATE: string = `
 @code
     let pathname = $path;
 
@@ -103,3 +105,6 @@
         </script>
     </body>
 </html>
+`;
+
+export default TEMPLATE;
