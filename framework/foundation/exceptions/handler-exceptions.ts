@@ -105,16 +105,6 @@ export class HandlerException {
 
             return streamReader;
         } else {
-            console.log("");
-
-            console.log(Deno.cwd());
-
-            console.log("");
-
-            for await (const dir of Deno.readDir(Deno.cwd())) {
-                console.log(dir.name);
-            }
-
             return await Deno.open(path);
         }
     }
@@ -128,7 +118,6 @@ export class HandlerException {
             const indexPrev = lineError - 40;
             const indexNext = lineError + 40;
 
-            console.log(stack.info.path.system);
             const fileReader = await this.openFile(stack.info.path.system);
 
             const lines = readLines(fileReader);
@@ -200,7 +189,9 @@ export class HandlerException {
             let file_system = file?.slice(0, indexNumberLine)?.replace("file:///","");
 
             if (file_system?.search(/[A-Z]\:/g) === -1) {
-                file_system = file_system?.startsWith("/") ? file_system : `/${file_system}`;
+                if (!file_system?.startsWith("https")) {
+                    file_system = file_system?.startsWith("/") ? file_system : `/${file_system}`;
+                }
             }
 
             return {
