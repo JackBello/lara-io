@@ -138,11 +138,11 @@ export type TStorage = {
 }
 
 export type TTemplate = {
-    getView(view: string): string;
+    getView(view: string): Promise<string>;
     render(html: string, data?: any): Promise<string>;
     view(view: string, data?: any): Promise<any>;
     share(values: any): void;
-    exists(view: string): boolean;
+    exists(view: string): Promise<boolean>;
     create(name: string, content?: string, data?: any): Promise<any>;
     preloadData(data: any): void;
 }

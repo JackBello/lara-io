@@ -3,7 +3,7 @@ import { StatusText } from '../../http/http-status.ts';
 import ErrorHttpPage from '../../templates/error/index.ts';
 
 export default async function RouteHandler(message: string, status: number) {
-    const hasView = template().exists(`@templates/error/index`);
+    const hasView = await template().exists(`@templates/error/index`);
 
     let view: string;
 
