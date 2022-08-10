@@ -62,6 +62,10 @@ export class HandlerException {
 
         const types: string[] = type ? type.split("/") : [];
 
+        console.log(name);
+        console.log(message);
+        console.log(type);
+
         if (types.includes("route") && types.includes("http")) {
             const status = parseInt(types[2]);
 
@@ -97,6 +101,7 @@ export class HandlerException {
     }
 
     protected async openFile(path: string) {
+        console.log(path);
         if (validateUrl(path)) {
             const request = await fetch(path);
             const streamReader = readerFromStreamReader(request.body!.getReader());
