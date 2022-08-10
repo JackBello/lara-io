@@ -62,11 +62,7 @@ export class HandlerException {
 
         const types: string[] = type ? type.split("/") : [];
 
-        console.log("error", name);
         console.log("error", message);
-        console.log("error", stack);
-        console.log("error", type);
-        console.log("error", extra);
 
         if (types.includes("route") && types.includes("http")) {
             const status = parseInt(types[2]);
@@ -106,15 +102,11 @@ export class HandlerException {
 
     protected async openFile(path: string) {
         if (validateUrl(path)) {
-            console.log("url", path);
-
             const request = await fetch(path);
             const streamReader = readerFromStreamReader(request.body!.getReader());
 
             return streamReader;
         } else {
-            console.log("file", path);
-
             return await Deno.open(path);
         }
     }
@@ -196,7 +188,11 @@ export class HandlerException {
 
             const errorLineAndColumnCode = file?.slice(indexNumberLine)?.slice(1)?.split(":");
             const file_import = file?.slice(0, indexNumberLine);
-            const file_system = file?.slice(0, indexNumberLine)?.replace("file:///","");
+            let file_system = file?.slice(0, indexNumberLine)?.replace("file:///","");
+
+            if (file_system?.search(/[A-Z]\:/g) === -1) {
+                file_system = file_system?.startsWith("/") ? file_system : `/${file_system}`;
+            }
 
             return {
                 info: {
