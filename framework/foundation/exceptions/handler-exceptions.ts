@@ -195,6 +195,8 @@ export class HandlerException {
                 file_system = file_system?.startsWith("/") ? file_system : `/${file_system}`;
             }
 
+            console.log("fs", file_system);
+
             return {
                 info: {
                     dir: file_system ? dirname(file_system) : undefined,
