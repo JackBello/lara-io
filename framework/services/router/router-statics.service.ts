@@ -74,7 +74,7 @@ export class RouterStaticsService extends Service {
             throw new RouteException(`This url '${pathname}' no exist to router.`, "http/route/404");
         }
 
-        const hasViewFolder = template().exists("@templates/static/folder");
+        const hasViewFolder = await template().exists("@templates/static/folder");
 
         let view: any;
 
