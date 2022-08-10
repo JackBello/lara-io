@@ -100,11 +100,15 @@ export class HandlerException {
 
     protected async openFile(path: string) {
         if (validateUrl(path)) {
+            console.log("url", path);
+
             const request = await fetch(path);
             const streamReader = readerFromStreamReader(request.body!.getReader());
 
             return streamReader;
         } else {
+            console.log("file", path);
+
             return await Deno.open(path);
         }
     }
