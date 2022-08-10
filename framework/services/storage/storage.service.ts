@@ -56,25 +56,25 @@ export class StorageService extends Service {
      */
     public disk(diskName?: string) {
         return {
-            delete: (path: string | Array<string>): boolean =>
-                execDelete(this, path, diskName),
+            delete: async (path: string | Array<string>): Promise<boolean> =>
+                await execDelete(this, path, diskName),
 
-            put: (path: string, contents: Uint8Array): boolean =>
-                execPut(this, path, contents, diskName),
+            put: async (path: string, contents: Uint8Array): Promise<boolean> =>
+                await execPut(this, path, contents, diskName),
 
-            putFile: (path: string, contents: TUploadedFile): string | false =>
-                execPutFile(this, path, contents, diskName),
+            putFile: async (path: string, contents: TUploadedFile): Promise<string | false> =>
+                await execPutFile(this, path, contents, diskName),
 
-            putFileAs: (
+            putFileAs: async (
                 path: string,
                 contents: TUploadedFile,
                 nameFile: string
-            ): string | false =>
-                execPutFileFileAs(this, path, contents, nameFile, diskName),
+            ): Promise<string | false> =>
+                await execPutFileFileAs(this, path, contents, nameFile, diskName),
 
-            exists: (path: string): boolean => execExists(this, path, diskName),
+            exists: async (path: string): Promise<boolean> => await execExists(this, path, diskName),
 
-            get: (path: string): string => execGet(this, path, diskName),
+            get: async (path: string): Promise<string> => await execGet(this, path, diskName),
 
             url: (path: string): string => execUrl(this, path, diskName),
 
@@ -91,29 +91,29 @@ export class StorageService extends Service {
             extension: (path: string): string =>
                 execInfo(this, path, diskName).ext.replace(".", ""),
 
-            fileInfo: (path: string): Deno.FileInfo =>
-                execFileInfo(this, path, diskName),
+            fileInfo: async (path: string): Promise<Deno.FileInfo> =>
+                (await execFileInfo(this, path, diskName)),
 
-            size: (path: string): number =>
-                execFileInfo(this, path, diskName).size,
+            size: async (path: string): Promise<number> =>
+                (await execFileInfo(this, path, diskName)).size,
 
-            lastModified: (path: string): Date | null =>
-                execFileInfo(this, path, diskName).mtime,
+            lastModified: async (path: string): Promise<Date | null> =>
+                (await execFileInfo(this, path, diskName)).mtime,
 
-            lasAccessed: (path: string): Date | null =>
-                execFileInfo(this, path, diskName).atime,
+            lasAccessed: async (path: string): Promise<Date | null> =>
+                (await execFileInfo(this, path, diskName)).atime,
 
-            creationDate: (path: string): Date | null =>
-                execFileInfo(this, path, diskName).birthtime,
+            creationDate: async (path: string): Promise<Date | null> =>
+                (await execFileInfo(this, path, diskName)).birthtime,
 
-            isDirectory: (path: string): boolean =>
-                execFileInfo(this, path, diskName).isDirectory,
+            isDirectory: async (path: string): Promise<boolean> =>
+                (await execFileInfo(this, path, diskName)).isDirectory,
 
-            isFile: (path: string): boolean =>
-                execFileInfo(this, path, diskName).isFile,
+            isFile: async (path: string): Promise<boolean> =>
+                (await execFileInfo(this, path, diskName)).isFile,
 
-            isSymlink: (path: string): boolean =>
-                execFileInfo(this, path, diskName).isSymlink,
+            isSymlink: async (path: string): Promise<boolean> =>
+                (await execFileInfo(this, path, diskName)).isSymlink,
         };
     }
 
@@ -147,8 +147,8 @@ export class StorageService extends Service {
      * @param {string} path
      * @returns {boolean}
      */
-    public exists(path: string): boolean {
-        return execExists(this, path);
+    public async exists(path: string): Promise<boolean> {
+        return await execExists(this, path);
     }
 
     /**
@@ -167,29 +167,29 @@ export class StorageService extends Service {
      * @param path {string}
      * @returns {string}
      */
-    public get(path: string): string {
-        return execGet(this, path);
+    public async get(path: string): Promise<string> {
+        return await execGet(this, path);
     }
 
-    public put(path: string, contents: Uint8Array): boolean {
-        return execPut(this, path, contents);
+    public async put(path: string, contents: Uint8Array): Promise<boolean> {
+        return await execPut(this, path, contents);
     }
 
-    public putFile(path: string, contents: TUploadedFile): string | false {
-        return execPutFile(this, path, contents);
+    public async putFile(path: string, contents: TUploadedFile): Promise<string | false> {
+        return await execPutFile(this, path, contents);
     }
 
     // contents: HttpUploadedFile,
-    public putFileAs(
+    public async putFileAs(
         path: string,
         contents: TUploadedFile,
         name: string
-    ): string | false {
-        return execPutFileFileAs(this, path, contents, name);
+    ): Promise<string | false> {
+        return await execPutFileFileAs(this, path, contents, name);
     }
 
-    public delete(path: string | Array<string>): boolean {
-        return execDelete(this, path);
+    public async delete(path: string | Array<string>): Promise<boolean> {
+        return await execDelete(this, path);
     }
 
     /**
@@ -273,8 +273,8 @@ export class StorageService extends Service {
      * @param  {string} path
      * @returns {Deno.FileInfo}
      */
-    public fileInfo(path: string): Deno.FileInfo {
-        return execFileInfo(this, path);
+    public async fileInfo(path: string): Promise<Deno.FileInfo> {
+        return await execFileInfo(this, path);
     }
 
     /**
@@ -283,8 +283,8 @@ export class StorageService extends Service {
      * @param {string} path
      * @returns {number}
      */
-    public size(path: string): number {
-        return this.fileInfo(path).size;
+    public async size(path: string): Promise<number> {
+        return (await this.fileInfo(path)).size;
     }
 
     /**
@@ -293,8 +293,8 @@ export class StorageService extends Service {
      * @param {string} path
      * @returns {Date | null}
      */
-    public lastModified(path: string): Date | null {
-        return this.fileInfo(path).mtime;
+    public async lastModified(path: string): Promise<Date | null> {
+        return (await this.fileInfo(path)).mtime;
     }
 
     /**
@@ -303,8 +303,8 @@ export class StorageService extends Service {
      * @param {string} path
      * @returns {Date | null}
      */
-    public lasAccessed(path: string): Date | null {
-        return this.fileInfo(path).atime;
+    public async lasAccessed(path: string): Promise<Date | null> {
+        return (await this.fileInfo(path)).atime;
     }
 
     /**
@@ -313,8 +313,8 @@ export class StorageService extends Service {
      * @param {string} path
      * @returns { Date | null}
      */
-    public creationDate(path: string): Date | null {
-        return this.fileInfo(path).birthtime;
+    public async creationDate(path: string): Promise<Date | null> {
+        return (await this.fileInfo(path)).birthtime;
     }
 
     /**
@@ -323,8 +323,8 @@ export class StorageService extends Service {
      * @param {string} path
      * @returns {boolean}
      */
-    public isDirectory(path: string): boolean {
-        return this.fileInfo(path).isDirectory;
+    public async isDirectory(path: string): Promise<boolean> {
+        return (await this.fileInfo(path)).isDirectory;
     }
 
     /**
@@ -333,8 +333,8 @@ export class StorageService extends Service {
      * @param {string} path
      * @returns {boolean}
      */
-    public isFile(path: string): boolean {
-        return this.fileInfo(path).isFile;
+    public async isFile(path: string): Promise<boolean> {
+        return (await this.fileInfo(path)).isFile;
     }
 
     /**
@@ -343,7 +343,7 @@ export class StorageService extends Service {
      * @param {string} path
      * @returns  {boolean}
      */
-    public isSymlink(path: string): boolean {
-        return this.fileInfo(path).isSymlink;
+    public async isSymlink(path: string): Promise<boolean> {
+        return (await this.fileInfo(path)).isSymlink;
     }
 }

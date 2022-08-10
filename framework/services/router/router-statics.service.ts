@@ -47,7 +47,7 @@ export class RouterStaticsService extends Service {
     public async getFolder(pathname: string) {
         if (!this.__pathStatics) throw new RouterException("Static path not set", "router/file");
 
-        let dir: Iterable<Deno.DirEntry>, dirPath: string;
+        let dirPath: string;
 
         const information: TInformation = {
             path: "",
@@ -56,12 +56,11 @@ export class RouterStaticsService extends Service {
 
         try {
             dirPath = `${this.__pathStatics}${pathname}`;
-            dir = Deno.readDirSync(dirPath);
 
             information.path = pathname;
 
-            for (const content of dir) {
-                const fileStat = Deno.statSync(`${dirPath}/${content.name}`);
+            for await (const content of Deno.readDir(dirPath)) {
+                const fileStat = await Deno.stat(`${dirPath}/${content.name}`);
 
                 information.content.push({
                     name: content.name,

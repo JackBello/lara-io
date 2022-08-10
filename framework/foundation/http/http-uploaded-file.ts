@@ -18,26 +18,26 @@ export class HttpUploadedFile extends HttpFile{
         }
     }
 
-    public save (path: string): void {
-        const content = this.getContent();
+    public async save (path: string): Promise<void> {
+        const content = await this.getContent();
 
-        if (content) Deno.writeFileSync(`${path}${this.originalName}`, content);
+        if (content) await Deno.writeFile(`${path}${this.originalName}`, content);
     }
 
-    public saveAs (path: string, name: string): void {
-        const content = this.getContent();
+    public async saveAs (path: string, name: string): Promise<void> {
+        const content = await this.getContent();
 
-        if (content) Deno.writeFileSync(`${path}${name}`, content);
+        if (content) await Deno.writeFile(`${path}${name}`, content);
     }
 
-    public store (path: string, disk: string = 'public'): void {
-        const content = this.getContent();
+    public async store (path: string, disk: string = 'public'): Promise<void> {
+        const content = await this.getContent();
 
         if (content) storage().disk(disk).put(`${path}${this.originalName}`, content);
     }
 
-    public storeAs (path: string, name: string, disk: string = 'public'): void {
-        const content = this.getContent();
+    public async storeAs (path: string, name: string, disk: string = 'public'): Promise<void> {
+        const content = await this.getContent();
 
         if (content) storage().disk(disk).put(`${path}${name}`, content);
     }

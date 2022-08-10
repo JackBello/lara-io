@@ -20,12 +20,6 @@ export class EngineAtom {
         }
     }
 
-    // protected include(view:string) {
-    //     const html = new TextDecoder().decode(Deno.readFileSync(`${this.__pathViews}${view}.atom`));
-
-    //     const result = await this.render(html, data);
-    // }
-
     protected parseVariables(vars: any) {
         if (typeof vars === "string") {
             return `"${vars}"`;

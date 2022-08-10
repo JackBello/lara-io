@@ -87,9 +87,9 @@ export class TemplateEngineService extends Service {
         }
     }
 
-    public exists(view: string): boolean {
+    public async exists(view: string): Promise<boolean> {
         try {
-            Deno.statSync(`${this.__pathViews}${view}.${this.__engine}`);
+            await Deno.stat(`${this.__pathViews}${view}.${this.__engine}`);
             return true;
         } catch {
             return false;
@@ -99,9 +99,9 @@ export class TemplateEngineService extends Service {
     public async create(name: string, content?: string, data?: any): Promise<any> {
         try {
             if (content) {
-                Deno.writeTextFileSync(`${this.__pathViews}${name}.${this.__engine}`, content);
+                await Deno.writeTextFile(`${this.__pathViews}${name}.${this.__engine}`, content);
             } else {
-                Deno.writeTextFileSync(`${this.__pathViews}${name}.${this.__engine}`, defaultContent);
+                await Deno.writeTextFile(`${this.__pathViews}${name}.${this.__engine}`, defaultContent);
             }
 
             if (data) {

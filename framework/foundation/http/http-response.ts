@@ -118,14 +118,14 @@ export class HttpResponse {
         return new Response(render, { headers: this.__headers , status, statusText })
     }
 
-    public download(file: string | HttpFile, name?: string, headers?: Record<string, string>) {
+    public async download(file: string | HttpFile, name?: string, headers?: Record<string, string>) {
         let content, open;
 
         for (const key in headers) this.__headers.set(key, headers[key]);
 
         if (file instanceof HttpFile) {
             if (file.fullPath) {
-                open = Deno.openSync(file.fullPath, { read: true });
+                open = await Deno.open(file.fullPath, { read: true });
 
                 content = readableStreamFromReader(open);
 
@@ -138,7 +138,7 @@ export class HttpResponse {
                 }
             }
         } else if (typeof file === "string") {
-            open = Deno.openSync(file, { read: true });
+            open = await Deno.open(file, { read: true });
 
             content = readableStreamFromReader(open);
 

@@ -63,9 +63,9 @@ export class HttpFile {
         }
     }
 
-    public getContent(): Uint8Array {
+    public async getContent(): Promise<Uint8Array> {
         if (this.__content) return this.__content;
-        return Deno.readFileSync(`${this.tmp}${this.fileName}`);
+        return await Deno.readFile(`${this.tmp}${this.fileName}`);
     }
 
     get originalName(): string {

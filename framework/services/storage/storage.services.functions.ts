@@ -2,45 +2,45 @@ import { StorageService } from "./storage.service.ts";
 import { TUploadedFile } from "../../@types/request.ts";
 import { Fs, Path, UUID } from "../../dependencies.ts";
 import { IInfoFile } from "../../@types/storage.ts";
-export const execExists = (
+export const execExists = async (
     context: StorageService,
     path: string,
     disk?: string
-): boolean => {
+): Promise<boolean> => {
     try {
-        const file = Deno.openSync(context.path(path, disk));
+        const file = await Deno.open(context.path(path, disk));
         if (file instanceof Deno.FsFile) return true;
         else return false;
-    } catch (e) {
+    } catch (_e) {
         return false;
     }
 };
 
-export const execGet = (
+export const execGet = async (
     context: StorageService,
     path: string,
     disk?: string
-): string => {
+): Promise<string> => {
     try {
         const decoder = new TextDecoder("utf-8");
         const filePath = context.path(path, disk);
-        const data = Deno.readFileSync(filePath);
+        const data = await Deno.readFile(filePath);
         return decoder.decode(data);
     } catch (error) {
         throw new Deno.errors.NotFound(error.message);
     }
 };
 
-export const execPut = (
+export const execPut = async (
     context: StorageService,
     path: string,
     contents: Uint8Array,
     disk?: string
-): boolean => {
+): Promise<boolean> => {
     try {
         const filePath = context.path(path, disk);
 
-        if (contents) Deno.writeFileSync(filePath, contents);
+        if (contents) await Deno.writeFile(filePath, contents);
 
         return true;
     } catch (error) {
@@ -49,23 +49,23 @@ export const execPut = (
     }
 };
 
-export const execPutFile = (
+export const execPutFile = async (
     context: StorageService,
     path: string,
     contents: TUploadedFile,
     disk?: string
-): string | false => {
+): Promise<string | false> => {
     try {
         const fileName = `${UUID.uuid()}.${contents.extension}`;
 
-        return execPutFileFileAs(context, path, contents, fileName, disk);
+        return await execPutFileFileAs(context, path, contents, fileName, disk);
     } catch (error) {
         console.log(error);
         return "error";
     }
 };
 
-export const execPutFileFileAs = (
+export const execPutFileFileAs = async (
     context: StorageService,
     path: string,
     contents: TUploadedFile,
@@ -79,7 +79,7 @@ export const execPutFileFileAs = (
         const fileContent = contents.getContent();
         const filePath = `${path}/${name}`;
 
-        return execPut(context, filePath, fileContent, disk)
+        return await execPut(context, filePath, fileContent, disk)
             ? `${directoryPath}/${name}`
             : false;
     } catch (error) {
@@ -88,23 +88,25 @@ export const execPutFileFileAs = (
     }
 };
 
-export const execDelete = (
+export const execDelete = async (
     context: StorageService,
     path: string | Array<string>,
     disk?: string
-): boolean => {
+): Promise<boolean> => {
     const paths = Array.isArray(path) ? path : [path];
     let success = true;
-    paths.forEach((currentPath) => {
+
+    for(const currentPath of paths) {
         try {
             const filePath = context.path(currentPath, disk);
 
-            Deno.removeSync(filePath);
+            await Deno.remove(filePath);
         } catch (error) {
             success = false;
             console.log("error", error);
         }
-    });
+    }
+
     return success;
 };
 
@@ -142,15 +144,15 @@ export const execInfo = (
     };
 };
 
-export const execFileInfo = (
+export const execFileInfo = async (
     context: StorageService,
     path: string,
     disk?: string
-): Deno.FileInfo => {
+): Promise<Deno.FileInfo> => {
     try {
         const filePath = context.path(path, disk);
-        const file = Deno.openSync(filePath);
-        return Deno.fstatSync(file.rid);
+        const file = await Deno.open(filePath);
+        return await Deno.fstat(file.rid);
     } catch (error) {
         if (error instanceof Deno.errors.NotFound)
             throw new Deno.errors.NotFound(error.message);
