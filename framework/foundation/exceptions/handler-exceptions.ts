@@ -75,6 +75,9 @@ export class HandlerException {
         const stacks: any[] = this.prepareStack(stack)
         const codes: any[] = await this.prepareCode(stacks);
 
+        console.log(Deno.cwd());
+        console.log(import.meta.url);
+
         if (this.__debug) {
             const html = ErrorDebugPage;
 
@@ -194,8 +197,6 @@ export class HandlerException {
             if (file_system?.search(/[A-Z]\:/g) === -1) {
                 file_system = file_system?.startsWith("/") ? file_system : `/${file_system}`;
             }
-
-            console.log("fs", file_system);
 
             return {
                 info: {
