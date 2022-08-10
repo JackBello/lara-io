@@ -63,6 +63,8 @@ export class HandlerException {
         const types: string[] = type ? type.split("/") : [];
 
         console.log("error", message);
+        console.log(Deno.cwd());
+        console.log(import.meta.url);
 
         if (types.includes("route") && types.includes("http")) {
             const status = parseInt(types[2]);
@@ -74,9 +76,6 @@ export class HandlerException {
 
         const stacks: any[] = this.prepareStack(stack)
         const codes: any[] = await this.prepareCode(stacks);
-
-        console.log(Deno.cwd());
-        console.log(import.meta.url);
 
         if (this.__debug) {
             const html = ErrorDebugPage;
