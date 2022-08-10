@@ -64,7 +64,10 @@ export class HandlerException {
 
         console.log("error", message);
         console.log(Deno.cwd());
-        console.log(import.meta.url);
+
+        for await (const dir of Deno.readDir(Deno.cwd())) {
+            console.log(dir.name);
+        }
 
         if (types.includes("route") && types.includes("http")) {
             const status = parseInt(types[2]);
@@ -103,7 +106,6 @@ export class HandlerException {
     }
 
     protected async openFile(path: string) {
-        console.log("link", path);
         if (validateUrl(path)) {
             const request = await fetch(path);
             const streamReader = readerFromStreamReader(request.body!.getReader());
