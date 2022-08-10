@@ -63,16 +63,9 @@ export class HandlerException {
         const types: string[] = type ? type.split("/") : [];
 
         console.log("error", message);
-        console.log(Deno.cwd());
-
-        for await (const dir of Deno.readDir(Deno.cwd())) {
-            console.log(dir.name);
-        }
 
         if (types.includes("route") && types.includes("http")) {
             const status = parseInt(types[2]);
-
-            console.log("intro");
 
             return await RouteHandler(message, status);
         }
@@ -112,6 +105,16 @@ export class HandlerException {
 
             return streamReader;
         } else {
+            console.log("");
+
+            console.log(Deno.cwd());
+
+            console.log("");
+
+            for await (const dir of Deno.readDir(Deno.cwd())) {
+                console.log(dir.name);
+            }
+
             return await Deno.open(path);
         }
     }
@@ -125,6 +128,7 @@ export class HandlerException {
             const indexPrev = lineError - 40;
             const indexNext = lineError + 40;
 
+            console.log(stack.info.path.system);
             const fileReader = await this.openFile(stack.info.path.system);
 
             const lines = readLines(fileReader);
