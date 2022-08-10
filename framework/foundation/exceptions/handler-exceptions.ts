@@ -62,9 +62,7 @@ export class HandlerException {
 
         const types: string[] = type ? type.split("/") : [];
 
-        console.log(name);
-        console.log(message);
-        console.log(type);
+        console.log("error", message);
 
         if (types.includes("route") && types.includes("http")) {
             const status = parseInt(types[2]);
@@ -73,7 +71,6 @@ export class HandlerException {
         }
 
         const stacks: any[] = this.prepareStack(stack)
-        console.log(stacks);
         const codes: any[] = await this.prepareCode(stacks);
 
         if (this.__debug) {

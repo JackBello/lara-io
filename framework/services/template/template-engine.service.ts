@@ -69,7 +69,7 @@ export class TemplateEngineService extends Service {
 
     public async view(view: string, data: any = {}): Promise<any> {
         try {
-            const html = new TextDecoder().decode(Deno.readFileSync(`${this.__pathViews}${view}.${this.__engine}`));
+            const html = new TextDecoder().decode(await Deno.readFile(`${this.__pathViews}${view}.${this.__engine}`));
 
             const result = await this.render(html, data);
 
@@ -79,9 +79,9 @@ export class TemplateEngineService extends Service {
         }
     }
 
-    public getView(view: string) {
+    public async getView(view: string) {
         try {
-            return new TextDecoder().decode(Deno.readFileSync(`${this.__pathViews}${view}.${this.__engine}`));
+            return new TextDecoder().decode(await Deno.readFile(`${this.__pathViews}${view}.${this.__engine}`));
         } catch(exception) {
             this.__handler.report(exception);
         }

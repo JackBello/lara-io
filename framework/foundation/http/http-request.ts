@@ -288,7 +288,7 @@ export class HttpRequest {
                 const reader = readerFromStreamReader(body.getReader());
                 const multipart = new MultipartReader(reader, boundary);
                 const form = await multipart.readForm({
-                    dir: "./src/storage/tmp",
+                    dir: "./storage/tmp",
                     prefix: `tpm-${Date.now()}-`
                 });
 
@@ -299,12 +299,12 @@ export class HttpRequest {
                         if  (typeof value[0] === "string") {
                             json[key] = value[0];
                         } else {
-                            const path = `${Deno.cwd()}/src/storage/tmp/`;
+                            const path = `${Deno.cwd()}/storage/tmp/`;
 
                             if (value[0].content && !value[0].tempfile) {
                                 files[key] = new HttpUploadedFile(value[0].content, value[0].filename, value[0].size, value[0].type, undefined, undefined);
                             } else {
-                                files[key] = new HttpUploadedFile(undefined, value[0].filename, value[0].size, value[0].type, path, value[0].tempfile?.replace("./src/storage/tmp\\", ""));
+                                files[key] = new HttpUploadedFile(undefined, value[0].filename, value[0].size, value[0].type, path, value[0].tempfile?.replace("./storage/tmp\\", ""));
                             }
                         }
                     }
