@@ -67,6 +67,8 @@ export class HandlerException {
         if (types.includes("route") && types.includes("http")) {
             const status = parseInt(types[2]);
 
+            console.log("intro");
+
             return await RouteHandler(message, status);
         }
 
