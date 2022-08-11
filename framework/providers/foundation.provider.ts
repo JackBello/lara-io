@@ -164,6 +164,8 @@ export class FoundationProvider extends Provider{
         $storage.initStorage();
 
         $serverHandle.applyHandleRequest(async (request: Request, connection: IConnectionInfo) => {
+            $handler.clearReports();
+
             $kernel.mergeMiddlewares();
 
             $httpResponse.clearResponse();
@@ -197,9 +199,9 @@ export class FoundationProvider extends Provider{
 
                 $handler.console(exception);
 
-                if (exception.type) {
-                    if (exception.type.indexOf("http") !== -1) $handler.clearReports();
-                }
+                // if (exception.type) {
+                //     if (exception.type.indexOf("http") !== -1) $handler.clearReports();
+                // }
 
                 return await $handler.render(exception);
             }
