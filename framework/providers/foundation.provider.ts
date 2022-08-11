@@ -199,10 +199,6 @@ export class FoundationProvider extends Provider{
 
                 $handler.console(exception);
 
-                // if (exception.type) {
-                //     if (exception.type.indexOf("http") !== -1) $handler.clearReports();
-                // }
-
                 return await $handler.render(exception);
             }
 
