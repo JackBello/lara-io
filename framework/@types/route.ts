@@ -23,7 +23,7 @@ export interface IGroup {
 }
 
 export interface IRoute {
-    uri: string,
+    uri?: string,
     name?: string,
     method?: TMethodHTTP | Array<TMethodHTTP>;
     middleware?: Array<any> | any;
@@ -31,7 +31,7 @@ export interface IRoute {
     dependencies?: Array<string>;
     redirect?: boolean;
     domain?: string;
-    action: any;
+    action?: any;
 }
 
 export interface IHistoryRoute {
