@@ -2,7 +2,7 @@ import { Provider } from './provider.ts';
 
 import { TemplateEngineService } from '../services/template/template-engine.service.ts';
 
-import { EngineAtom } from '../services/template/atom.engine.ts';
+import { EngineAtom } from '../services/template/engines/atom.engine.ts';
 export class TemplateProvider extends Provider{
     register() {
         this.app.registerService("template/engine", TemplateEngineService, {

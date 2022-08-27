@@ -1,5 +1,6 @@
 // deno-lint-ignore-file
-import AtomException from '../../foundation/exceptions/template/atom.exception.ts'
+import AtomException from '../../../foundation/exceptions/template/atom.exception.ts';
+
 export class EngineAtom {
     private regExpCodeJS = /({{(.*?)}}|{{--(.*?)--}}|\@include\((.*?)\)|\@for\((.*?)\)|\@endfor|\@if\((.*?)\)|\@elseif\((.*?)\)|\@else|\@endif|\@break|\@continue|\@while\((.*?)\)|\@do|\@endwhile)/g;
     private regExpDirectives = /\@(.*?)\((.*?)\)/g;

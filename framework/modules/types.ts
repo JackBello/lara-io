@@ -55,6 +55,8 @@ export type THttpRequest = {
     user?: any;
     method: TAllMethodHTTP;
     protocol: string;
+    secure: boolean;
+    xhr: boolean;
     ip: string;
     baseUrl: string;
     baseUri: string;

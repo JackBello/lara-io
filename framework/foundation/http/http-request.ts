@@ -40,6 +40,8 @@ export class HttpRequest {
     private $accepts: string[] = [];
     private $subdomain: string = "";
     private $protocol: string = "";
+    private $secure: boolean = false;
+    private $xhr: boolean = false;
     private $languages: string[] = [];
 
     public async serialize() {
@@ -64,6 +66,8 @@ export class HttpRequest {
         this.$ip = this.getIp();
         this.$subdomain = this.getSubdomain();
         this.$protocol = this.getProtocol();
+        this.$secure = this.getSecure();
+        this.$xhr = this.getXhr();
         this.$languages = this.getLanguages();
     }
 
@@ -121,6 +125,26 @@ export class HttpRequest {
         return urlPattern.protocol;
     }
 
+    private getSecure() {
+        if (!this.__request) throw new Error("Request not found");
+
+        const urlPattern: URLPattern = new URLPattern(this.__request.url);
+
+        return urlPattern.protocol === "https" ? true : false;
+    }
+
+    private getXhr() {
+        if (!this.__request) throw new Error("Request not found");
+
+        const xhr = this.headers["X-Requested-With"];
+
+        if (!xhr) return false;
+
+        if (xhr === "XMLHttpRequest") return true
+
+        return false;
+    }
+
     private getSubdomain() {
         if (!this.__request) throw new Error("Request not found");
 
@@ -172,7 +196,9 @@ export class HttpRequest {
 
         const urlPattern: URLPattern = new URLPattern(this.__request.url);
 
-        return `${urlPattern.protocol}://${urlPattern.hostname}`;
+        const port = urlPattern.port ? `:${urlPattern.port}` : "";
+
+        return `${urlPattern.protocol}://${urlPattern.hostname}${port}`;
     }
 
     private getUri() {
@@ -539,6 +565,14 @@ export class HttpRequest {
 
     get protocol() {
         return this.$protocol;
+    }
+
+    get secure() {
+        return this.$secure;
+    }
+
+    get xhr() {
+        return this.$xhr;
     }
 
     get accepts() {

@@ -11,13 +11,13 @@ import { template, history } from '../../helpers/miscellaneous.ts';
 import { Path, Cookies, conversionXML, conversionYAML } from '../../dependencies.ts';
 
 const { extname, basename } = Path;
-const { setCookie } = Cookies;
+const { setCookie, deleteCookie } = Cookies;
 
 export class HttpResponse {
     private __request?: Request;
     private __status: number = 200;
     private __headers: Headers = new Headers();
-    private __body: any;
+    private __body: any = "";
 
     public clearResponse() {
         this.__headers = new Headers();
@@ -27,14 +27,6 @@ export class HttpResponse {
 
     public getHeaders() {
         return this.__headers;
-    }
-
-    public setBody(body: any) {
-        this.__body = body;
-    }
-
-    public setStatus(status: number) {
-        this.__status = status;
     }
 
     public setRequest(request: Request) {
@@ -107,7 +99,7 @@ export class HttpResponse {
     }
 
     public async view(name: string, data: any = {}, status: number = 200, headers: Record<string, string> = {}) {
-        const html = template().getView(name);
+        const html = await template().getView(name);
         const render = await template().render(html, data);
         const statusText = StatusText[status];
 
@@ -162,14 +154,60 @@ export class HttpResponse {
         return history().redirect(url, status);
     }
 
+    public route(name: string, data: any, hostname?: string) {
+        name;
+        data;
+        hostname;
+    }
+
     public cookie(name: string, value: string) {
         setCookie(this.__headers, {name, value})
+        return this;
+    }
+
+    public removeCookie(name: string) {
+        deleteCookie(this.__headers, name);
         return this;
     }
 
     public header(name: string, value: string) {
         this.__headers.set(name, value)
         return this;
+    }
+
+    public safeHeader(name: string, value: string) {
+        if (!this.__headers.has(name)) {
+            this.__headers.set(name, value)
+        }
+        return this;
+    }
+
+    public removeHeader(name: string) {
+        if (this.__headers.has(name)) {
+            this.__headers.delete(name)
+        }
+        return this;
+    }
+
+    public contentType(type: string) {
+        this.__headers.set("Content-type", type);
+        return this;
+    }
+
+    public status(status: number) {
+        this.__status = status;
+        return this;
+    }
+
+    public body(body: any) {
+        this.__body = body;
+        return this;
+    }
+
+    public send(body: any) {
+        this.__body = body;
+
+        return new Response(this.__body, { status: this.__status, headers: this.__headers, statusText: StatusText[this.__status] })
     }
 
     public headers(headers: Record<string, string>) {

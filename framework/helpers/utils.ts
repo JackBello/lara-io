@@ -1,5 +1,9 @@
 // deno-lint-ignore-file no-explicit-any
-import "https://deno.land/std@0.151.0/dotenv/load.ts";
+// import "https://deno.land/std@0.151.0/dotenv/load.ts";
+
+import { config } from "https://raw.githubusercontent.com/daychongyang/dotenv/master/mod.ts";
+
+config();
 
 import { Path } from '../dependencies.ts';
 
@@ -16,10 +20,18 @@ export function validateUrl (value: string) {
 export function formatter(value: any) {
     if (value.startsWith("[") && value.endsWith("]")) {
         return JSON.parse(value);
+    } else if (value === "undefined") {
+        return undefined;
     } else if (value === "true" || value === "false") {
         return Boolean(value);
     } else if (isNaN(Number(value))) {
-        return String(value);
+        if (String(value).startsWith("\"") && String(value).endsWith("\"")) {
+            return String(value).slice(1,-1);
+        } else if (String(value).startsWith("\'") && String(value).endsWith("\'")) {
+            return String(value).slice(1,-1);
+        } else {
+            return String(value);
+        }
     } else {
         return Number(value);
     }

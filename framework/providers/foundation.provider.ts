@@ -5,7 +5,7 @@ import { IConnectionInfo } from '../@types/server.ts';
 import { RouteContext } from '../foundation/router/route-context.ts';
 
 import { TemplateEngineService } from '../services/template/template-engine.service.ts';
-import { EngineAtom } from '../services/template/atom.engine.ts';
+import { EngineAtom } from '../services/template/engines/atom.engine.ts';
 
 import { HttpProxy } from '../foundation/http/http-proxy.ts';
 import { HttpRequest } from '../foundation/http/http-request.ts';
