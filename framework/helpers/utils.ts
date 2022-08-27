@@ -1,9 +1,5 @@
 // deno-lint-ignore-file no-explicit-any
-// import "https://deno.land/std@0.151.0/dotenv/load.ts";
-
-import { config } from "https://raw.githubusercontent.com/daychongyang/dotenv/master/mod.ts";
-
-config();
+import "https://deno.land/std@0.153.0/dotenv/load.ts";
 
 import { Path } from '../dependencies.ts';
 
