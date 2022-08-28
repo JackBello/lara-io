@@ -8,6 +8,7 @@ export default class Route {
     private __name?: string;
     private __redirect?: boolean;
     private __regexp?: string | string[];
+    private __proxy?: boolean;
 
     constructor(
         uri: string,
@@ -17,7 +18,8 @@ export default class Route {
         domain?: string,
         name?: string,
         redirect?: boolean,
-        regexp?: string | string[]
+        regexp?: string | string[],
+        proxy?: boolean
     ) {
         this.__uri = uri;
         this.__method = method;
@@ -27,6 +29,7 @@ export default class Route {
         this.__name = name;
         this.__redirect = redirect;
         this.__regexp = regexp;
+        this.__proxy = proxy;
     }
 
     get uri(): string {
@@ -59,5 +62,9 @@ export default class Route {
 
     get regexp() {
         return this.__regexp;
+    }
+
+    get proxy() {
+        return this.__proxy;
     }
 }

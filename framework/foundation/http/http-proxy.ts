@@ -1,26 +1,31 @@
-// deno-lint-ignore-file no-explicit-any
 export class HttpProxy {
-    public async request(url: string, options: any) {
-        const client = Deno.createHttpClient({
-            proxy: {
-                url
-            }
-        });
+    public request(ref: string, request: Request, port: number, origin: string) {
+        try {
+            const patternProxy = new URL(ref);
+            const patternOrigin = new URL(origin);
 
-        const headers = new Headers();
+            const headers = new Headers();
+            headers.append("X-Forwarded-For", ref)
+            headers.append("X-Forwarded-Port", `${port}`);
+            headers.append("X-Forwarded-Proto", patternProxy.protocol.slice(0,-1));
+            headers.append("X-Forwarded-Host", origin);
 
-        headers.append("X-Forwarded-For", url)
-        headers.append("X-Forwarded-Port", options.port);
-        headers.append("X-Forwarded-Proto", options.protocol);
-        headers.append("X-Forwarded-Host", options.url);
+            request.headers.forEach((value, key) => {
+                headers.append(key, value);
+            });
 
-        const proxy = await fetch(options.url, {
-            client,
-            headers
-        });
+            const url = new URL(origin === request.url ? `${patternOrigin.protocol}//${patternOrigin.hostname}${patternOrigin.port ? `:${patternOrigin.port}` : ''}` : request.url);
+            url.protocol = patternProxy.protocol;
+            url.hostname = patternProxy.hostname;
+            url.port = `${port}`;
 
-        console.log(proxy);
-
-        return await proxy.text();
+            return fetch(url.href, {
+                method: request.method,
+                body: request.body,
+                headers
+            });
+        } catch (exception) {
+            console.log(exception);
+        }
     }
 }

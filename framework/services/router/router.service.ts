@@ -1,4 +1,4 @@
-// deno-lint-ignore-file no-explicit-any
+// deno-lint-ignore-file no-explicit-any no-inferrable-types
 import { Service } from '../services.ts';
 
 import { RouterHistoryService } from './router-history.service.ts';
@@ -15,7 +15,6 @@ import { TRequest, TAllMethodHTTP, TMethodHTTP } from '../../@types/server.ts';
 import { getBasePath } from '../../helpers/utils.ts';
 import { HandlerException } from '../../foundation/exceptions/handler-exceptions.ts';
 import { HttpKernel } from '../../foundation/http/http-kernel.ts';
-import { HttpProxy } from '../../foundation/http/http-proxy.ts';
 
 import { injectPropertiesToController, injectParamsToController } from '../../foundation/dependency-injection.ts';
 
@@ -32,6 +31,7 @@ export class RouterService extends Service {
     protected __result: any;
 
     protected __routes: Array<Route> = [];
+    protected __errors: Map<number, any> = new Map();
 
     protected __strict?: boolean;
 
@@ -52,11 +52,11 @@ export class RouterService extends Service {
         controller: [],
         namespace: [],
         domain: [],
+        subdomain: [],
+        hostname: [],
         prefix: [],
         name: []
     }
-
-    protected __proxy?: HttpProxy;
 
     protected __template?: TemplateEngineService;
 
@@ -68,6 +68,8 @@ export class RouterService extends Service {
 
     protected __pathController?: string;
     protected __pathMiddleware?: string;
+
+    public isProxy: boolean = false;
 
     protected makePattern(urlRequest: string, urlRoute: string) {
         const matchParams = new URLPattern(urlRoute.replace(/\{/g,":").replace(/\}/g,""));
@@ -349,6 +351,7 @@ export class RouterService extends Service {
             name,
             regexp,
             redirect,
+            proxy
         } = setting;
 
         if (!this.__hostname)
@@ -405,7 +408,7 @@ export class RouterService extends Service {
             }
         });
 
-        const route = new Route(`${gruopPrefix}${uri}`, method,action,middleware,groupDomain, name, redirect, regexp);
+        const route = new Route(`${gruopPrefix}${uri}`, method,action,middleware,groupDomain, name, redirect, regexp, proxy);
 
         this.__routes.push(route);
     }
@@ -473,6 +476,14 @@ export class RouterService extends Service {
         }
     }
 
+    public head(uri: string, action: any) {
+        try {
+            this.registerRoute({ uri, method: "HEAD", name: undefined, regexp: undefined , middleware: undefined}, action);
+        } catch(exception) {
+            this.__handler.report(exception);
+        }
+    }
+
     public match(methods: TMethodHTTP[] | TMethodHTTP, uri: string, name: string, action: any, middleware?: any) {
         try {
             this.registerRoute({ uri, method: methods, name: name, regexp: undefined , middleware}, action);
@@ -483,7 +494,7 @@ export class RouterService extends Service {
 
     public any(uri: string, name: string, action: any, middleware?: any) {
         try {
-            this.registerRoute({ uri, method: ["GET", "POST", "PUT", "DELETE", "PATCH"], name: name, regexp: undefined , middleware}, action);
+            this.registerRoute({ uri, method: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], name: name, regexp: undefined , middleware}, action);
         } catch(exception) {
             this.__handler.report(exception);
         }
@@ -527,28 +538,35 @@ export class RouterService extends Service {
         }
     }
 
+    public socket(event: string, action: any) {
+        event;
+        action;
+    }
+
+    public error(status: number, message: string, action: any) {
+        if (this.__errors.has(status)) {
+            throw new RouteException(`this error status ${status} already exist to route errors`, "route/errors/exist");
+        }
+
+        this.__errors.set(status, {
+            status,
+            message,
+            action
+        })
+    }
+
     public proxy(uri: string, url: string, port: number, methods: TMethodHTTP[] | TMethodHTTP = "GET") {
         try {
-            if (!this.__proxy) throw new RouteException("proxy must be given", "route/proxy/paramater");
-
-            const selfProxy = this.__proxy.request;
-
             this.registerRoute({
                 uri,
                 name: undefined,
-                method: methods
-            }, async ({ request, response }: any) => {
-                const proxy = await selfProxy(url, {
-                    port,
-                    protocol: request().protocol,
-                    method: request().method,
-                    url: request().fullUrl
-                });
-
-                return response(proxy, 200, {
-                    "Content-Type": "text/html"
-                })
-            })
+                method: methods,
+                proxy: true
+            }, (ctx: any) => ({
+                url,
+                port,
+                origin: ctx.request().baseUrl+uri
+            }))
         } catch (exception) {
             this.__handler.report(exception);
         }
@@ -594,6 +612,24 @@ export class RouterService extends Service {
         };
     }
 
+    public subdomain(subdomain: string) {
+        return {
+            group: (routes: any) => {
+                this.__group.subdomain.unshift(subdomain);
+                this.execGroup(routes, "subdomain");
+            },
+        };
+    }
+
+    public hostname(hostname: string) {
+        return {
+            group: (routes: any) => {
+                this.__group.hostname.unshift(hostname);
+                this.execGroup(routes, "hostname");
+            },
+        };
+    }
+
     public name(name: string) {
         return {
             group: (routes: any) => {
@@ -603,8 +639,11 @@ export class RouterService extends Service {
         };
     }
 
-    public useProxy(proxy: HttpProxy) {
-        this.__proxy = proxy;
+    public beforeRoute(action:any) {
+        if (!this.__request)
+            throw new RouterException("the request is undefined in the router", "router");
+
+        return action(this.__request);
     }
 
     public useTemplate(template: TemplateEngineService) {
@@ -653,7 +692,11 @@ export class RouterService extends Service {
 
     public async lookPetitions() {
         try {
+            if (this.isProxy) return;
+
             const route: Route | Promise<Route> | undefined = await this.loadRoute();
+
+            // if (route?.proxy === false || route?.proxy === undefined) this.isProxy = false;
 
             if (route) {
                 this.__currentRoute = route;
@@ -663,6 +706,8 @@ export class RouterService extends Service {
                 if (this.__history) this.__history.handleHistory(route);
 
                 if (route.middlewares) this.__kernel.add(route.middlewares);
+
+                if (route.proxy) this.isProxy = route.proxy;
 
                 const action = await this.loadAction(route.handler);
 

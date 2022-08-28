@@ -47,6 +47,7 @@ export interface ISettingRoute {
     regexp?: string | string[];
     name?: string;
     redirect?: boolean;
+    proxy?: boolean;
 }
 
 export interface IHistory {

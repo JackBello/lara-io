@@ -77,7 +77,10 @@ export class ServerService extends Service {
 
     protected prepareResponse(body: any, headers: Headers) {
         if (body instanceof Response) {
-            for(const [key, value] of headers.entries()) body.headers.set(key, value);
+            headers.forEach((value, key) => {
+                body.headers.set(key, value);
+            });
+
             return body;
         }
 

@@ -144,8 +144,6 @@ export class FoundationProvider extends Provider{
 
         $router.setPathController(http);
 
-        $router.useProxy($httpProxy);
-
         $router.useTemplate($templateEngine);
 
         $router.useHistory($routerHistory);
@@ -159,7 +157,6 @@ export class FoundationProvider extends Provider{
         $routeContext.inject("view", view);
         $routeContext.inject("config", config);
         $routeContext.inject("service", service);
-        $routeContext.inject("proxy", $httpProxy.request);
 
         $storage.initStorage();
 
@@ -190,6 +187,10 @@ export class FoundationProvider extends Provider{
                 actionResponse = $kernel.excuting ? $kernel.result : $router.result;
             } else {
                 actionResponse = $router.result;
+            }
+
+            if ($router.isProxy) {
+                return await $httpProxy.request(actionResponse.url, request, actionResponse.port, actionResponse.origin);
             }
 
             if (!$handler.existsReport()) serveResponse = $server.serveResponse(actionResponse, $httpResponse.getHeaders());
